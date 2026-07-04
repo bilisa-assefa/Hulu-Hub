@@ -357,8 +357,14 @@
   shadow.appendChild(styleEl);
 
   // ── DOM ────────────────────────────────────────────────────────────────────
-  const wrapper = document.createElement("div");
-  wrapper.innerHTML = `
+ const wrapper = document.createElement("div");
+
+wrapper.style.position = "fixed";
+wrapper.style.inset = "0";
+wrapper.style.pointerEvents = "none";
+wrapper.style.zIndex = "2147483647";
+
+wrapper.innerHTML = `
     <button id="hub-btn" title="Hulu Hub">
       ${LOGO_SVG}
       <span id="hub-badge"></span>
