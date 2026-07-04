@@ -1,18 +1,8 @@
 /**
- * Hulu Hub — Background Service Worker v3.1
+ * Hulu Hub — Background Service Worker v3.1 (Stealth Mode)
  *
- * Fix: removed hardcoded left:1920 from chrome.windows.create().
- * That value pushed the window fully off-screen on 1920-wide monitors,
- * causing Chrome to throw "Invalid value for bounds. Bounds must be at
- * least 50% within visible screen space."
- *
- * New approach:
- *   1. Create the window without left/top (Chrome picks a safe default).
- *   2. Immediately after creation, move it to the top-right corner using
- *      the actual screen dimensions reported by the sender's tab via
- *      chrome.scripting.executeScript — so we always use real screen size.
- *   3. The window is kept non-minimized so the tab inside it is always
- *      the active tab of its window → no Chrome timer throttling.
+ * Fixed: Uses a 'popup' window type with 'focused: false' to bypass
+ * aggressive background throttling without stealing the user's focus or flashing.
  */
 
 "use strict";
@@ -37,7 +27,7 @@ async function getScreenSize(senderTabId) {
   return { w: 1280, h: 800 }; // safe fallback
 }
 
-// ── Window / tab management ───────────────────────────────────────────────────
+// ── Window / tab management (Stealth Mode) ───────────────────────────────────
 async function getProviderTab(provider, senderTabId) {
   const cfg = PROVIDERS[provider];
   const key = `win_${provider}`;
@@ -54,29 +44,29 @@ async function getProviderTab(provider, senderTabId) {
     } catch { /* closed */ }
   }
 
-  // Create window without explicit position — Chrome picks a safe default.
-  // This avoids the "bounds must be 50% within screen" error entirely.
+  // Get dimensions to safely place it near the right edge
+  let safeLeft = 0;
+  try {
+    const { w } = await getScreenSize(senderTabId);
+    safeLeft = Math.max(0, w - 510);
+  } catch { safeLeft = 800; }
+
+  // Create the window as a 'popup' type and pass focused: false
+  // Popups are lightweight and 'focused: false' prevents the window from stealing focus.
   const win = await chrome.windows.create({
     url:    cfg.url,
-    type:   "normal",
+    type:   "popup", 
     width:  500,
     height: 740,
-    state:  "normal",  // must NOT be "minimized" — minimized tabs get throttled
+    left:   safeLeft,
+    top:    0,
+    focused: false, // 🤫 Do not steal the user's active focus on creation
   });
 
   const tab = win.tabs[0];
   await chrome.storage.session.set({ [key]: { windowId: win.id, tabId: tab.id } });
 
-  // Now reposition to top-right using actual screen size (never causes bounds error
-  // because we compute the left value to guarantee the window is fully on-screen)
-  try {
-    const { w } = await getScreenSize(senderTabId);
-    const winWidth = 500;
-    const safeLeft = Math.max(0, w - winWidth - 10); // 10px margin from right edge
-    await chrome.windows.update(win.id, { left: safeLeft, top: 0 });
-  } catch { /* repositioning is cosmetic — ignore errors */ }
-
-  console.log(`[HuluHub BG] Created window ${win.id} tab ${tab.id} for ${provider}`);
+  console.log(`[HuluHub BG] Created stealth window ${win.id} for ${provider}`);
   return tab;
 }
 
@@ -126,65 +116,48 @@ async function captureScreenshot(senderTabId) {
   }
 }
 
-// ── Main handler ──────────────────────────────────────────────────────────────
-// ── Main handler (With Throttling Bypass) ──────────────────────────────────────
+// ── Main handler (Stealth Throttling Bypass) ──────────────────────────────────
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action !== "SEND_TO_PROVIDER") return false;
 
   (async () => {
-    // Keep track of the user's current window so we can jump back to it
-    const originalWindowId = sender.tab?.windowId;
-    let providerTab = null;
-
     try {
       const senderTabId = sender.tab?.id;
       const imageData   = message.attachScreenshot && senderTabId
         ? await captureScreenshot(senderTabId) : null;
 
-      providerTab = await getProviderTab(message.provider, senderTabId);
+      const providerTab = await getProviderTab(message.provider, senderTabId);
       
-      // ⚡ BYPASS THROTTLING: Bring the provider window to the front out of focus lock
-      await chrome.windows.update(providerTab.windowId, { focused: true });
-
       await waitForTabLoad(providerTab.id);
       await waitForContentScript(providerTab.id);
 
+      // Sent in the background. Because it is a popup window running with active execution,
+      // it handles automation script requests seamlessly.
       chrome.tabs.sendMessage(
         providerTab.id,
         { action: "SEND_PROMPT", provider: message.provider,
           prompt: message.prompt, imageData },
         response => {
-          // Send the response back to our floating UI
           if (chrome.runtime.lastError)
             sendResponse({ error: "Lost connection to provider tab. Please try again." });
           else
             sendResponse(response);
-
-          // 🔄 RESTORE FOCUS: Return focus back to the user's workspace immediately
-          if (originalWindowId) {
-            chrome.windows.update(originalWindowId, { focused: true }).catch(() => {});
-          }
         }
       );
     } catch (err) {
       console.error("[HuluHub BG]", err);
       sendResponse({ error: err.message });
-      
-      // Safety reset focus if something crashed mid-execution
-      if (originalWindowId) {
-        chrome.windows.update(originalWindowId, { focused: true }).catch(() => {});
-      }
     }
   })();
 
   return true;
 });
 
-
+// ── Toolbar Icon Click Listener ──────────────────────────────────────────────
 chrome.action.onClicked.addListener((tab) => {
   if (tab.id) {
     chrome.tabs.sendMessage(tab.id, { action: "TOGGLE_HUB_PANEL" }).catch(() => {
-     
+      /* Ignore pages where content scripts can't run */
     });
   }
 });
