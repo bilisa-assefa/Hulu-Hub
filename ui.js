@@ -18,70 +18,25 @@
   // ── SVG Logo ───────────────────────────────────────────────────────────────
   // Two overlapping "H" letterforms in a circle with a gradient fill.
   const LOGO_SVG = `
-   <svg xmlns="http://www.w3.org/2000/svg"
-     viewBox="0 0 512 512"
-     width="512"
-     height="512">
-
+   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="40" height="40">
   <defs>
-    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#2EF2C4"/>
       <stop offset="100%" stop-color="#4D5DFF"/>
     </linearGradient>
   </defs>
 
-  <!-- Speech Bubble -->
-  <path
-      fill="url(#grad)"
-      d="
-      M130 70
-      C92 70 64 98 64 136
-      V316
-      C64 354 92 382 130 382
-      H204
-      V430
-      L278 382
-      H382
-      C420 382 448 354 448 316
-      V136
-      C448 98 420 70 382 70
-      Z"/>
+  <!-- Bubble -->
+  <path fill="url(#g)"
+        d="M18 8C12.5 8 8 12.5 8 18v22c0 5.5 4.5 10 10 10h10l6 6v-6h12c5.5 0 10-4.5 10-10V18c0-5.5-4.5-10-10-10H18z"/>
 
   <!-- Inner cutout -->
-  <path
-      fill="#08111F"
-      d="
-      M150 104
-      C126 104 108 122 108 146
-      V306
-      C108 330 126 348 150 348
-      H214
-      V384
-      L264 348
-      H362
-      C386 348 404 330 404 306
-      V146
-      C404 122 386 104 362 104
-      Z"/>
+  <path fill="#0B1220"
+        d="M20 12c-4.4 0-8 3.6-8 8v18c0 4.4 3.6 8 8 8h10v3.5l4-3.5h10c4.4 0 8-3.6 8-8V20c0-4.4-3.6-8-8-8H20z"/>
 
   <!-- H -->
-  <path
-      fill="url(#grad)"
-      d="
-      M180 150
-      H218
-      V218
-      H294
-      V150
-      H332
-      V302
-      H294
-      V252
-      H218
-      V302
-      H180
-      Z"/>
-
+  <path fill="url(#g)"
+        d="M24 18h5v9h6v-9h5v22h-5v-8h-6v8h-5V18z"/>
 </svg>`;
 
   // ── Inner styles (all inside shadow — zero leakage) ────────────────────────
