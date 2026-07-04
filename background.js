@@ -127,39 +127,58 @@ async function captureScreenshot(senderTabId) {
 }
 
 // ── Main handler ──────────────────────────────────────────────────────────────
+// ── Main handler (With Throttling Bypass) ──────────────────────────────────────
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action !== "SEND_TO_PROVIDER") return false;
 
   (async () => {
+    // Keep track of the user's current window so we can jump back to it
+    const originalWindowId = sender.tab?.windowId;
+    let providerTab = null;
+
     try {
       const senderTabId = sender.tab?.id;
       const imageData   = message.attachScreenshot && senderTabId
         ? await captureScreenshot(senderTabId) : null;
 
-      const tab = await getProviderTab(message.provider, senderTabId);
-      await waitForTabLoad(tab.id);
-      await waitForContentScript(tab.id);
+      providerTab = await getProviderTab(message.provider, senderTabId);
+      
+      // ⚡ BYPASS THROTTLING: Bring the provider window to the front out of focus lock
+      await chrome.windows.update(providerTab.windowId, { focused: true });
+
+      await waitForTabLoad(providerTab.id);
+      await waitForContentScript(providerTab.id);
 
       chrome.tabs.sendMessage(
-        tab.id,
+        providerTab.id,
         { action: "SEND_PROMPT", provider: message.provider,
           prompt: message.prompt, imageData },
         response => {
+          // Send the response back to our floating UI
           if (chrome.runtime.lastError)
             sendResponse({ error: "Lost connection to provider tab. Please try again." });
           else
             sendResponse(response);
+
+          // 🔄 RESTORE FOCUS: Return focus back to the user's workspace immediately
+          if (originalWindowId) {
+            chrome.windows.update(originalWindowId, { focused: true }).catch(() => {});
+          }
         }
       );
     } catch (err) {
       console.error("[HuluHub BG]", err);
       sendResponse({ error: err.message });
+      
+      // Safety reset focus if something crashed mid-execution
+      if (originalWindowId) {
+        chrome.windows.update(originalWindowId, { focused: true }).catch(() => {});
+      }
     }
   })();
 
   return true;
 });
-
 
 
 chrome.action.onClicked.addListener((tab) => {
