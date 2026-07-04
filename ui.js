@@ -18,28 +18,71 @@
   // ── SVG Logo ───────────────────────────────────────────────────────────────
   // Two overlapping "H" letterforms in a circle with a gradient fill.
   const LOGO_SVG = `
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52" width="52" height="52">
-      <defs>
-        <linearGradient id="hh-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%"   stop-color="#6366f1"/>
-          <stop offset="100%" stop-color="#8b5cf6"/>
-        </linearGradient>
-        <filter id="hh-shadow" x="-20%" y="-20%" width="140%" height="140%">
-          <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#6366f1" flood-opacity="0.35"/>
-        </filter>
-      </defs>
-      <circle cx="26" cy="26" r="26" fill="url(#hh-grad)" filter="url(#hh-shadow)"/>
-      <!-- Left H -->
-      <rect x="10" y="16" width="4" height="20" rx="1.5" fill="white" opacity="0.95"/>
-      <rect x="10" y="24" width="10" height="4"  rx="1.5" fill="white" opacity="0.95"/>
-      <rect x="16" y="16" width="4" height="20" rx="1.5" fill="white" opacity="0.95"/>
-      <!-- Right H -->
-      <rect x="22" y="16" width="4" height="20" rx="1.5" fill="white" opacity="0.95"/>
-      <rect x="22" y="24" width="10" height="4"  rx="1.5" fill="white" opacity="0.95"/>
-      <rect x="28" y="16" width="4" height="20" rx="1.5" fill="white" opacity="0.95"/>
-      <!-- Subtle shine -->
-      <ellipse cx="20" cy="17" rx="10" ry="4" fill="white" opacity="0.12"/>
-    </svg>`;
+   <svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 512 512"
+     width="512"
+     height="512">
+
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2EF2C4"/>
+      <stop offset="100%" stop-color="#4D5DFF"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Speech Bubble -->
+  <path
+      fill="url(#grad)"
+      d="
+      M130 70
+      C92 70 64 98 64 136
+      V316
+      C64 354 92 382 130 382
+      H204
+      V430
+      L278 382
+      H382
+      C420 382 448 354 448 316
+      V136
+      C448 98 420 70 382 70
+      Z"/>
+
+  <!-- Inner cutout -->
+  <path
+      fill="#08111F"
+      d="
+      M150 104
+      C126 104 108 122 108 146
+      V306
+      C108 330 126 348 150 348
+      H214
+      V384
+      L264 348
+      H362
+      C386 348 404 330 404 306
+      V146
+      C404 122 386 104 362 104
+      Z"/>
+
+  <!-- H -->
+  <path
+      fill="url(#grad)"
+      d="
+      M180 150
+      H218
+      V218
+      H294
+      V150
+      H332
+      V302
+      H294
+      V252
+      H218
+      V302
+      H180
+      Z"/>
+
+</svg>`;
 
   // ── Inner styles (all inside shadow — zero leakage) ────────────────────────
   const styleEl = document.createElement("style");
