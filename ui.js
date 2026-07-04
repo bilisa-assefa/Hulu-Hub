@@ -61,10 +61,15 @@
       border: none;
       padding: 0;
       cursor: pointer;
+      pointer-events: auto;
+      touch-action: manipulation;
+      user-select: none;
+      -webkit-user-select: none;
       background: none;
       z-index: 2147483647;
       transition: transform 0.2s cubic-bezier(.34,1.56,.64,1);
       filter: drop-shadow(0 4px 12px rgba(99,102,241,0.45));
+      
     }
     #hub-btn:hover  { transform: scale(1.1);  }
     #hub-btn:active { transform: scale(0.95); }
@@ -452,8 +457,30 @@ wrapper.innerHTML = `
     hubBtn.classList.remove("open");
   }
 
-  hubBtn.addEventListener("click",   () => panelOpen ? closePanel() : openPanel());
-  closeBtn.addEventListener("click", () => closePanel());
+  hubBtn.addEventListener("click", (e) => {
+
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+
+    if (panelOpen) {
+        closePanel();
+    } else {
+        openPanel();
+    }
+
+}, true);
+ closeBtn.addEventListener("click", (e) => {
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    closePanel();
+
+}, true);
+  shadow.addEventListener("click", (e) => {
+    e.stopPropagation();
+}, true);
 
   // ── Storage helpers ────────────────────────────────────────────────────────
   async function loadHistory(p) {
