@@ -1,0 +1,41 @@
+{
+  "manifest_version": 3,
+  "name": "Hulu Hub",
+  "version": "3.1.0",
+  "description": "Chat with ChatGPT, Claude, and Gemini from any page via a floating button.",
+  "permissions": [
+    "tabs",
+    "activeTab",
+    "storage",
+    "scripting",
+    "windows"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["ui.js"],
+      "css": ["ui.css"],
+      "run_at": "document_end",
+      "exclude_matches": [
+        "https://chatgpt.com/*",
+        "https://claude.ai/*",
+        "https://gemini.google.com/*"
+      ]
+    },
+    {
+      "matches": [
+        "https://chatgpt.com/*",
+        "https://claude.ai/*",
+        "https://gemini.google.com/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

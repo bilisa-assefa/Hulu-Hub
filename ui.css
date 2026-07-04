@@ -1,0 +1,12 @@
+/* Hulu Hub — host-page anchor element only.
+   All panel styles live inside the Shadow DOM (ui.js).
+   This file is minimal — just ensures the root element itself
+   is positioned correctly and never inherits from the host page. */
+#hulu-hub-root {
+  all: initial;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  z-index: 2147483647;
+  pointer-events: none; /* children re-enable pointer-events individually */
+}
