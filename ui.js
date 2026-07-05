@@ -188,51 +188,52 @@
   wrapper.style.pointerEvents = "none";
   wrapper.style.zIndex = "2147483647";
 
-  wrapper.innerHTML = `
-    <button id="hub-btn" title="Hulu Hub">
-      ${LOGO_SVG}
-      <span id="hub-badge"></span>
-    </button>
-    <div id="hub-panel">
-      <div class="hub-header">
-        <div class="hub-header-left">
-          <div class="hub-logo-sm">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
-              <rect x="10" y="16" width="4" height="20" rx="1.5" fill="#0B1220"/>
-              <rect x="10" y="24" width="10" height="4"  rx="1.5" fill="#0B1220"/>
-              <rect x="16" y="16" width="4" height="20" rx="1.5" fill="#0B1220"/>
-              <rect x="22" y="16" width="4" height="20" rx="1.5" fill="#0B1220"/>
-              <rect x="22" y="24" width="10" height="4"  rx="1.5" fill="#0B1220"/>
-              <rect x="28" y="16" width="4" height="20" rx="1.5" fill="#0B1220"/>
-            </svg>
-          </div>
-          <h3>Hulu Hub</h3>
+  // Locate this block inside ui.js and swap the inner HTML template matching the selector below:
+wrapper.innerHTML = `
+  <button id="hub-btn" title="Hulu Hub">
+    ${LOGO_SVG}
+    <span id="hub-badge"></span>
+  </button>
+  <div id="hub-panel">
+    <div class="hub-header">
+      <div class="hub-header-left">
+        <div class="hub-logo-sm">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+            <rect x="10" y="16" width="4" height="20" rx="1.5" fill="#ffffff"/>
+            <rect x="10" y="24" width="10" height="4"  rx="1.5" fill="#ffffff"/>
+            <rect x="16" y="16" width="4" height="20" rx="1.5" fill="#ffffff"/>
+            <rect x="22" y="16" width="4" height="20" rx="1.5" fill="#ffffff"/>
+            <rect x="22" y="24" width="10" height="4"  rx="1.5" fill="#ffffff"/>
+            <rect x="28" y="16" width="4" height="20" rx="1.5" fill="#ffffff"/>
+          </svg>
         </div>
-        <div class="hub-provider-wrap">
-          <select id="hub-provider">
-            <option value="chatgpt">ChatGPT</option>
-            <option value="claude">Claude</option>
-            <option value="gemini">Gemini</option>
-          </select>
-          <span class="hub-provider-arrow">▾</span>
-        </div>
-        <button id="hub-close-btn" title="Close">✕</button>
+        <h3>Hulu Hub</h3>
       </div>
-      <div id="hub-history">
-        <div class="hub-empty">
-          <div class="hub-empty-icon">✦</div>
-          <div class="hub-empty-text">Start a conversation</div>
-        </div>
+      <div class="hub-provider-wrap">
+        <select id="hub-provider">
+          <option value="chatgpt">ChatGPT</option>
+          <option value="claude">Claude</option>
+          <option value="gemini">Gemini</option>
+        </select>
+        <span class="hub-provider-arrow">▾</span>
       </div>
-      <div class="hub-input-area">
-        <textarea id="hub-input" placeholder="Ask anything… (Enter to send, Shift+Enter for new line)"></textarea>
-        <div class="hub-actions">
-          <button id="hub-ss-btn">📷 Screenshot</button>
-          <button id="hub-send-btn">Send →</button>
-        </div>
+      <button id="hub-close-btn" title="Close">✕</button>
+    </div>
+    <div id="hub-history">
+      <div class="hub-empty">
+        <div class="hub-empty-icon">✦</div>
+        <div class="hub-empty-text">Start a conversation</div>
       </div>
     </div>
-  `;
+    <div class="hub-input-area">
+      <textarea id="hub-input" placeholder="Ask anything… (Enter to send, Shift+Enter for new line)"></textarea>
+      <div class="hub-actions">
+        <button id="hub-ss-btn">📷 Screenshot</button>
+        <button id="hub-send-btn">Send →</button>
+      </div>
+    </div>
+  </div>
+`;
   shadow.appendChild(wrapper);
 
   const hubBtn   = shadow.getElementById("hub-btn");
