@@ -1,5 +1,5 @@
 /**
- * Hulu Hub — Floating UI v3.2 (Color Matched)
+ * Hulu Hub — Floating UI v3.4 (Fully Draggable & Color Matched)
  */
 
 "use strict";
@@ -40,9 +40,9 @@
       border-radius: 50%;
       border: none;
       padding: 0;
-      cursor: pointer;
+      cursor: grab;
       pointer-events: auto;
-      touch-action: manipulation;
+      touch-action: none;
       user-select: none;
       -webkit-user-select: none;
       background: none;
@@ -50,8 +50,8 @@
       transition: transform 0.2s cubic-bezier(.34,1.56,.64,1);
       filter: drop-shadow(0 4px 12px rgba(77,93,255,0.45));
     }
+    #hub-btn:active { cursor: grabbing; transform: scale(0.95); }
     #hub-btn:hover  { transform: scale(1.1);  }
-    #hub-btn:active { transform: scale(0.95); }
     #hub-btn.open   { transform: scale(0.92); filter: drop-shadow(0 2px 6px rgba(77,93,255,0.3)); }
 
     #hub-badge {
@@ -101,23 +101,22 @@
       pointer-events: auto; 
     }
 
-    /* MATCHED BRAND COLOR GRADIENT */
     .hub-header { 
       display: flex; 
       align-items: center; 
       justify-content: space-between; 
       padding: 14px 16px; 
-      background: linear-gradient(135deg, #2EF2C4 0%, #4D5DFF 100%); 
+      background: rgb(0,0,0,); 
       flex-shrink: 0; 
       gap: 10px; 
     }
     .hub-header-left { display: flex; align-items: center; gap: 9px; }
     .hub-logo-sm { width: 28px; height: 28px; border-radius: 8px; background: rgba(11,18,32,0.3); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .hub-logo-sm svg { width: 18px; height: 18px; }
-    .hub-header h3 { font-size: 15px; font-weight: 600; color: #0B1220; letter-spacing: -0.01em; }
+    .hub-header h3 { font-size: 15px; font-weight: 600; color: #fff; letter-spacing: -0.01em; }
     .hub-provider-wrap { position: relative; }
-    #hub-provider { appearance: none; -webkit-appearance: none; padding: 5px 26px 5px 10px; border-radius: 8px; border: 1px solid rgba(11,18,32,0.2); font-size: 12px; font-weight: 600; background: rgba(255,255,255,0.25); color: #0B1220; cursor: pointer; outline: none; font-family: inherit; }
-    #hub-provider option { background: #4D5DFF; color: #fff; }
+    #hub-provider { appearance: none; -webkit-appearance: none; padding: 5px 26px 5px 10px; border-radius: 8px; border: 1px solid rgba(11,18,32,0.2); font-size: 12px; font-weight: 600; background: rgb(0,0,0,); color: #000000; cursor: pointer; outline: none; font-family: inherit; }
+    #hub-provider option { background: rgba(11,18,32,0.3); color: #fff; }
     .hub-provider-arrow { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); pointer-events: none; color: #0B1220; font-size: 10px; }
     #hub-close-btn { width: 28px; height: 28px; border-radius: 8px; border: none; background: rgba(11,18,32,0.15); color: #0B1220; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; transition: background 0.15s; font-family: inherit; }
     #hub-close-btn:hover { background: rgba(11,18,32,0.3); }
@@ -134,7 +133,6 @@
     .hub-msg { max-width: 84%; padding: 10px 14px; border-radius: 16px; font-size: 13.5px; line-height: 1.6; word-wrap: break-word; white-space: pre-wrap; animation: bubbleIn 0.18s ease; }
     @keyframes bubbleIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
     
-    /* GRADIENT USER BUBBLE */
     .hub-msg.user { 
       background: linear-gradient(135deg, #2EF2C4 0%, #4D5DFF 100%); 
       color: #0B1220; 
@@ -161,7 +159,6 @@
     #hub-ss-btn:hover { background: rgba(46,242,196,0.1); border-color: #2EF2C4; }
     #hub-ss-btn.active { background: rgba(46,242,196,0.2); border-color: #2EF2C4; color: #fff; }
 
-    /* GRADIENT SEND BUTTON */
     #hub-send-btn { 
       padding: 7px 20px; 
       border-radius: 9px; 
@@ -188,52 +185,51 @@
   wrapper.style.pointerEvents = "none";
   wrapper.style.zIndex = "2147483647";
 
-  // Locate this block inside ui.js and swap the inner HTML template matching the selector below:
-wrapper.innerHTML = `
-  <button id="hub-btn" title="Hulu Hub">
-    ${LOGO_SVG}
-    <span id="hub-badge"></span>
-  </button>
-  <div id="hub-panel">
-    <div class="hub-header">
-      <div class="hub-header-left">
-        <div class="hub-logo-sm">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
-            <rect x="10" y="16" width="4" height="20" rx="1.5" fill="#ffffff"/>
-            <rect x="10" y="24" width="10" height="4"  rx="1.5" fill="#ffffff"/>
-            <rect x="16" y="16" width="4" height="20" rx="1.5" fill="#ffffff"/>
-            <rect x="22" y="16" width="4" height="20" rx="1.5" fill="#ffffff"/>
-            <rect x="22" y="24" width="10" height="4"  rx="1.5" fill="#ffffff"/>
-            <rect x="28" y="16" width="4" height="20" rx="1.5" fill="#ffffff"/>
-          </svg>
+  wrapper.innerHTML = `
+    <button id="hub-btn" title="Hulu Hub">
+      ${LOGO_SVG}
+      <span id="hub-badge"></span>
+    </button>
+    <div id="hub-panel">
+      <div class="hub-header">
+        <div class="hub-header-left">
+          <div class="hub-logo-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+              <rect x="10" y="16" width="4" height="20" rx="1.5" fill="#ffffff"/>
+              <rect x="10" y="24" width="10" height="4"  rx="1.5" fill="#ffffff"/>
+              <rect x="16" y="16" width="4" height="20" rx="1.5" fill="#ffffff"/>
+              <rect x="22" y="16" width="4" height="20" rx="1.5" fill="#ffffff"/>
+              <rect x="22" y="24" width="10" height="4"  rx="1.5" fill="#ffffff"/>
+              <rect x="28" y="16" width="4" height="20" rx="1.5" fill="#ffffff"/>
+            </svg>
+          </div>
+          <h3>Hulu Hub</h3>
         </div>
-        <h3>Hulu Hub</h3>
+        <div class="hub-provider-wrap">
+          <select id="hub-provider">
+            <option value="chatgpt">ChatGPT</option>
+            <option value="claude">Claude</option>
+            <option value="gemini">Gemini</option>
+          </select>
+          <span class="hub-provider-arrow">▾</span>
+        </div>
+        <button id="hub-close-btn" title="Close">✕</button>
       </div>
-      <div class="hub-provider-wrap">
-        <select id="hub-provider">
-          <option value="chatgpt">ChatGPT</option>
-          <option value="claude">Claude</option>
-          <option value="gemini">Gemini</option>
-        </select>
-        <span class="hub-provider-arrow">▾</span>
+      <div id="hub-history">
+        <div class="hub-empty">
+          <div class="hub-empty-icon">✦</div>
+          <div class="hub-empty-text">Start a conversation</div>
+        </div>
       </div>
-      <button id="hub-close-btn" title="Close">✕</button>
+      <div class="hub-input-area">
+        <textarea id="hub-input" placeholder="Ask anything… (Enter to send, Shift+Enter for new line)"></textarea>
+        <div class="hub-actions">
+          <button id="hub-ss-btn">📷 Screenshot</button>
+          <button id="hub-send-btn">Send →</button>
+        </div>
+      </div>
     </div>
-    <div id="hub-history">
-      <div class="hub-empty">
-        <div class="hub-empty-icon">✦</div>
-        <div class="hub-empty-text">Start a conversation</div>
-      </div>
-    </div>
-    <div class="hub-input-area">
-      <textarea id="hub-input" placeholder="Ask anything… (Enter to send, Shift+Enter for new line)"></textarea>
-      <div class="hub-actions">
-        <button id="hub-ss-btn">📷 Screenshot</button>
-        <button id="hub-send-btn">Send →</button>
-      </div>
-    </div>
-  </div>
-`;
+  `;
   shadow.appendChild(wrapper);
 
   const hubBtn   = shadow.getElementById("hub-btn");
@@ -253,8 +249,80 @@ wrapper.innerHTML = `
   let isBusy           = false;
   let unreadCount      = 0;
 
+  // --- DRAG AND DROP SYSTEM ---
+  let isDragging = false;
+  let startX = 0, startY = 0;
+  let btnLeft = 28, btnBottom = 28;
+
+  chrome.storage.local.get(["hubBtnLeft", "hubBtnBottom"], (data) => {
+    if (data.hubBtnLeft !== undefined) {
+      btnLeft = data.hubBtnLeft;
+      hubBtn.style.left = `${btnLeft}px`;
+      hubBtn.style.right = "auto";
+    }
+    if (data.hubBtnBottom !== undefined) {
+      btnBottom = data.hubBtnBottom;
+      hubBtn.style.bottom = `${btnBottom}px`;
+    }
+    repositionPanel();
+  });
+
+  function repositionPanel() {
+    panel.style.left = `${btnLeft}px`;
+    panel.style.bottom = `${btnBottom + 66}px`;
+  }
+
+  hubBtn.addEventListener("mousedown", (e) => {
+    if (e.button !== 0) return; 
+    isDragging = false;
+    startX = e.clientX;
+    startY = e.clientY;
+
+    const initialLeft = hubBtn.offsetLeft;
+    const initialTop = hubBtn.offsetTop;
+
+    function onMouseMove(moveEvent) {
+      const deltaX = moveEvent.clientX - startX;
+      const deltaY = moveEvent.clientY - startY;
+
+      if (Math.abs(deltaX) > 4 || Math.abs(deltaY) > 4) {
+        isDragging = true;
+      }
+
+      if (isDragging) {
+        let newLeft = initialLeft + deltaX;
+        let newTop = initialTop + deltaY;
+
+        newLeft = Math.max(10, Math.min(window.innerWidth - 64, newLeft));
+        newTop = Math.max(10, Math.min(window.innerHeight - 64, newTop));
+
+        btnLeft = newLeft;
+        btnBottom = window.innerHeight - (newTop + 54);
+
+        hubBtn.style.left = `${btnLeft}px`;
+        hubBtn.style.right = "auto";
+        hubBtn.style.bottom = `${btnBottom}px`;
+        repositionPanel();
+      }
+    }
+
+    function onMouseUp() {
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
+
+      if (isDragging) {
+        chrome.storage.local.set({ hubBtnLeft: btnLeft, hubBtnBottom: btnBottom });
+      }
+    }
+
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onMouseUp);
+  });
+
+  // --- INTERACTION FLOW HOOKS ---
   function openPanel() {
     panelOpen = true;
+    repositionPanel();
     panel.classList.add("visible");
     hubBtn.classList.add("open");
     unreadCount = 0;
@@ -276,6 +344,7 @@ wrapper.innerHTML = `
   hubBtn.addEventListener("click", (e) => {
     e.preventDefault();
     e.stopPropagation();
+    if (isDragging) return;
     togglePanel();
   });
 
