@@ -1,5 +1,5 @@
 /**
- * Hulu Hub — AI Provider Content Script v3.2
+ * Hulu Hub — AI Provider Content Script v3.5 (Selector Fixes)
  */
 
 "use strict";
@@ -20,8 +20,8 @@ if (!window.__HULU_HUB_INJECTED) {
   const ChatGPT = {
     name: "chatgpt",
     selectors: {
-      input:            "#prompt-textarea",
-      sendButton:       ['button[data-testid="send-button"]', 'button[aria-label="Send prompt"]'],
+      input:            ["#prompt-textarea", "textarea", "[contenteditable='true']"],
+      sendButton:       ['button[data-testid="send-button"]', 'button[aria-label="Send prompt"]', 'button.mb-1'],
       stopButton:       ['button[data-testid="stop-button"]', 'button[aria-label="Stop"]'],
       assistantMessage: 'div[data-message-author-role="assistant"]',
     },
@@ -36,14 +36,13 @@ if (!window.__HULU_HUB_INJECTED) {
   const Claude = {
     name: "claude",
     selectors: {
-      input:            ['div[contenteditable="true"].ProseMirror', '[contenteditable="true"]'],
-      sendButton:       ['button[aria-label="Send Message"]', 'button[aria-label="Send message"]'],
+      input:            ['div[contenteditable="true"]', '.ProseMirror', '[role="textbox"]'],
+      sendButton:       ['button[aria-label="Send Message"]', 'button[aria-label="Send message"]', 'button:has(svg path[d*="M"])'],
       stopButton:       ['button[aria-label="Stop"]', 'button[aria-label="Stop Response"]'],
-      assistantMessage: 'div.grid.grid-cols-1.gap-y-4\\:nth-child\\(even\\), div[data-testid="assistant-message"], .font-claude-message',
+      assistantMessage: ['div.font-claude-message', '[data-testid="assistant-message"]', '.font-user-message + div'],
     },
     extractText(el) {
       if (!el) return "";
-      // Strip target streaming symbols and isolated nodes to prevent text doubling bugs
       let container = el.querySelector('.grid-cols-1 .whitespace-pre-wrap') || el.querySelector('[class*="prose"]') || el;
       let raw = (container.innerText || container.textContent || "");
       return raw.replace(/[▋●■]$/, "").replace(/^Claude responded:\s*/i, "").trim();
@@ -56,7 +55,7 @@ if (!window.__HULU_HUB_INJECTED) {
   const Gemini = {
     name: "gemini",
     selectors: {
-      input:            ['rich-textarea div[contenteditable="true"]', 'div[contenteditable="true"]'],
+      input:            ['rich-textarea div[contenteditable="true"]', 'div[contenteditable="true"]', 'textarea'],
       sendButton:       ['button[aria-label="Send message"]', 'button[aria-label="Send Message"]'],
       stopButton:       ['button[aria-label="Stop response"]'],
       assistantMessage: ["model-response", ".response-content"],
@@ -89,7 +88,7 @@ if (!window.__HULU_HUB_INJECTED) {
     return false;
   }
 
-  async function findElement(sel, ms = 10000) {
+  async function findElement(sel, ms = 15000) {
     const list = Array.isArray(sel) ? sel : [sel];
     const end  = Date.now() + ms;
     while (Date.now() < end) {
@@ -97,14 +96,14 @@ if (!window.__HULU_HUB_INJECTED) {
         const el = document.querySelector(s);
         if (el) return el;
       }
-      await sleep(200);
+      await sleep(250);
     }
     throw new Error(`[HuluHub] Not found: ${toCSS(sel)}`);
   }
 
   async function injectText(el, text) {
     el.focus();
-    await sleep(80);
+    await sleep(150);
     if (el.tagName === "TEXTAREA") {
       const setter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, "value")?.set;
       if (setter) setter.call(el, text); else el.value = text;
@@ -112,31 +111,33 @@ if (!window.__HULU_HUB_INJECTED) {
     } else {
       document.execCommand("selectAll", false, null);
       document.execCommand("delete",    false, null);
-      await sleep(30);
+      await sleep(50);
       el.innerText = text;
       el.dispatchEvent(new InputEvent("input", { bubbles: true, inputType: "insertText", data: text }));
     }
-    await sleep(150);
+    await sleep(200);
   }
 
   async function clickSend(provider) {
     const btns = Array.isArray(provider.selectors.sendButton) ? provider.selectors.sendButton : [provider.selectors.sendButton];
-    for (let i = 0; i < 30; i++) {
+    for (let i = 0; i < 40; i++) {
       for (const s of btns) {
         const btn = document.querySelector(s);
         if (btn && !btn.disabled && btn.getAttribute("aria-disabled") !== "true") {
-          btn.click(); return;
+          btn.focus();
+          btn.click(); 
+          return;
         }
       }
-      await sleep(100);
+      await sleep(150);
     }
     throw new Error("[HuluHub] Could not submit prompt.");
   }
 
   function waitForResponse(provider, startCount) {
     const msgCSS      = toCSS(provider.selectors.assistantMessage);
-    const SILENCE_MS  = 1200; // Accelerated processing fallback loop
-    const TIMEOUT_MS  = 90_000;
+    const SILENCE_MS  = 1500; 
+    const TIMEOUT_MS  = 120_000;
 
     const nodesBefore    = document.querySelectorAll(msgCSS);
     const lastNodeBefore = nodesBefore.length > 0 ? nodesBefore[nodesBefore.length - 1] : null;
@@ -226,7 +227,7 @@ if (!window.__HULU_HUB_INJECTED) {
 
     const inputEl = await findElement(provider.selectors.input);
     await injectText(inputEl, text);
-    await sleep(200);
+    await sleep(250);
     await clickSend(provider);
     return { response: await waitForResponse(provider, startCount) };
   }
