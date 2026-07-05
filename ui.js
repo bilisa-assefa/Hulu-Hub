@@ -1,5 +1,5 @@
 /**
- * Hulu Hub — Floating UI v3.4 (Fully Draggable & Color Matched)
+ * Hulu Hub — Floating UI v3.5 (Pure Dark Theme Edition)
  */
 
 "use strict";
@@ -82,11 +82,9 @@
       flex-direction: column;
       border-radius: 20px;
       overflow: hidden;
-      background: rgba(11, 18, 32, 0.85);
-      backdrop-filter: blur(24px) saturate(180%);
-      -webkit-backdrop-filter: blur(24px) saturate(180%);
-      border: 1px solid rgba(255,255,255,0.12);
-      box-shadow: 0 24px 64px rgba(0,0,0,0.3), 0 4px 16px rgba(77,93,255,0.15);
+      background: #000000;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 24px 64px rgba(0,0,0,0.7), 0 4px 24px rgba(0, 0, 0, 0.8);
       transform-origin: bottom left;
       transform: scale(0.88) translateY(8px);
       opacity: 0;
@@ -106,29 +104,29 @@
       align-items: center; 
       justify-content: space-between; 
       padding: 14px 16px; 
-      background: rgb(0,0,0,); 
+      background: linear-gradient(135deg, #2EF2C4 0%, #4D5DFF 100%); 
       flex-shrink: 0; 
       gap: 10px; 
     }
     .hub-header-left { display: flex; align-items: center; gap: 9px; }
     .hub-logo-sm { width: 28px; height: 28px; border-radius: 8px; background: rgba(11,18,32,0.3); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .hub-logo-sm svg { width: 18px; height: 18px; }
-    .hub-header h3 { font-size: 15px; font-weight: 600; color: #fff; letter-spacing: -0.01em; }
+    .hub-header h3 { font-size: 15px; font-weight: 600; color: #0B1220; letter-spacing: -0.01em; }
     .hub-provider-wrap { position: relative; }
-    #hub-provider { appearance: none; -webkit-appearance: none; padding: 5px 26px 5px 10px; border-radius: 8px; border: 1px solid rgba(11,18,32,0.2); font-size: 12px; font-weight: 600; background: rgb(0,0,0,); color: #000000; cursor: pointer; outline: none; font-family: inherit; }
-    #hub-provider option { background: rgba(11,18,32,0.3); color: #fff; }
+    #hub-provider { appearance: none; -webkit-appearance: none; padding: 5px 26px 5px 10px; border-radius: 8px; border: 1px solid rgba(11,18,32,0.2); font-size: 12px; font-weight: 600; background: rgba(255,255,255,0.25); color: #0B1220; cursor: pointer; outline: none; font-family: inherit; }
+    #hub-provider option { background: #4D5DFF; color: #fff; }
     .hub-provider-arrow { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); pointer-events: none; color: #0B1220; font-size: 10px; }
     #hub-close-btn { width: 28px; height: 28px; border-radius: 8px; border: none; background: rgba(11,18,32,0.15); color: #0B1220; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; transition: background 0.15s; font-family: inherit; }
     #hub-close-btn:hover { background: rgba(11,18,32,0.3); }
 
-    #hub-history { flex: 1; overflow-y: auto; padding: 16px 14px; display: flex; flex-direction: column; gap: 10px; scroll-behavior: smooth; }
+    #hub-history { flex: 1; overflow-y: auto; padding: 16px 14px; display: flex; flex-direction: column; gap: 10px; scroll-behavior: smooth; background: #050505; }
     #hub-history::-webkit-scrollbar { width: 4px; }
     #hub-history::-webkit-scrollbar-track { background: transparent; }
-    #hub-history::-webkit-scrollbar-thumb { background: rgba(46,242,196,0.2); border-radius: 4px; }
+    #hub-history::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 4px; }
 
-    .hub-empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; opacity: 0.45; pointer-events: none; user-select: none; }
-    .hub-empty-icon { font-size: 32px; color: #2EF2C4; }
-    .hub-empty-text { font-size: 13px; color: #2EF2C4; font-weight: 500; }
+    .hub-empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; opacity: 0.6; pointer-events: none; user-select: none; }
+    .hub-empty-icon { font-size: 32px; color: #ffffff; }
+    .hub-empty-text { font-size: 13px; color: #ffffff; font-weight: 500; }
 
     .hub-msg { max-width: 84%; padding: 10px 14px; border-radius: 16px; font-size: 13.5px; line-height: 1.6; word-wrap: break-word; white-space: pre-wrap; animation: bubbleIn 0.18s ease; }
     @keyframes bubbleIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
@@ -141,23 +139,23 @@
       box-shadow: 0 2px 12px rgba(77,93,255,0.25); 
       font-weight: 500;
     }
-    .hub-msg.assistant { background: rgba(255,255,255,0.08); color: #f3f4f6; align-self: flex-start; border-bottom-left-radius: 4px; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
-    .hub-msg.loading { background: rgba(46,242,196,0.1); border: 1px solid rgba(46,242,196,0.2); color: #2EF2C4; font-style: italic; font-size: 13px; align-self: flex-start; border-bottom-left-radius: 4px; animation: pulse 1.6s ease-in-out infinite; }
+    .hub-msg.assistant { background: #121212; color: #f3f4f6; align-self: flex-start; border-bottom-left-radius: 4px; border: 1px solid #1a1a1a; box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
+    .hub-msg.loading { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #ffffff; font-style: italic; font-size: 13px; align-self: flex-start; border-bottom-left-radius: 4px; animation: pulse 1.6s ease-in-out infinite; }
     @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
 
     a.hub-link { color: #2EF2C4; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; word-break: break-all; font-weight: 500; }
     a.hub-link:hover { color: #4D5DFF; }
 
-    .hub-input-area { padding: 12px 14px; background: rgba(11,18,32,0.9); border-top: 1px solid rgba(255,255,255,0.08); flex-shrink: 0; display: flex; flex-direction: column; gap: 9px; }
-    #hub-input { width: 100%; padding: 10px 12px; border: 1.5px solid rgba(77,93,255,0.3); border-radius: 12px; resize: none; font-family: inherit; font-size: 13.5px; line-height: 1.5; outline: none; height: 64px; background: rgba(255,255,255,0.05); color: #fff; transition: border-color 0.15s, box-shadow 0.15s; }
-    #hub-input::placeholder { color: #6b7280; }
+    .hub-input-area { padding: 12px 14px; background: #000000; border-top: 1px solid #121212; flex-shrink: 0; display: flex; flex-direction: column; gap: 9px; }
+    #hub-input { width: 100%; padding: 10px 12px; border: 1.5px solid #1c1c1e; border-radius: 12px; resize: none; font-family: inherit; font-size: 13.5px; line-height: 1.5; outline: none; height: 64px; background: #0a0a0a; color: #fff; transition: border-color 0.15s, box-shadow 0.15s; }
+    #hub-input::placeholder { color: #48484a; }
     #hub-input:focus { border-color: #2EF2C4; box-shadow: 0 0 0 3px rgba(46,242,196,0.15); }
-    #hub-input:disabled { background: rgba(0,0,0,0.3); color: #666; }
+    #hub-input:disabled { background: #000000; color: #444; border-color: #121212; }
 
     .hub-actions { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-    #hub-ss-btn { display: flex; align-items: center; gap: 5px; padding: 7px 12px; border-radius: 9px; border: 1.5px solid rgba(46,242,196,0.3); background: transparent; color: #2EF2C4; font-size: 12px; font-weight: 500; cursor: pointer; font-family: inherit; transition: all 0.15s; }
-    #hub-ss-btn:hover { background: rgba(46,242,196,0.1); border-color: #2EF2C4; }
-    #hub-ss-btn.active { background: rgba(46,242,196,0.2); border-color: #2EF2C4; color: #fff; }
+    #hub-ss-btn { display: flex; align-items: center; gap: 5px; padding: 7px 12px; border-radius: 9px; border: 1.5px solid #1c1c1e; background: #0a0a0a; color: #a1a1aa; font-size: 12px; font-weight: 500; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+    #hub-ss-btn:hover { background: #121212; color: #ffffff; border-color: #2c2c2e; }
+    #hub-ss-btn.active { background: #ffffff; border-color: #ffffff; color: #000000; }
 
     #hub-send-btn { 
       padding: 7px 20px; 
