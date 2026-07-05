@@ -1,5 +1,5 @@
 /**
- * Hulu Hub — Background Service Worker v3.3 (Minimize & Persist Session Fix)
+ * Hulu Hub — Background Service Worker v3.4 (Bottom-Right Mini-Window)
  */
 
 "use strict";
@@ -23,7 +23,6 @@ async function getScreenSize(senderTabId) {
   return { w: 1280, h: 800 };
 }
 
-// Retrieves or initializes the provider workspace window
 async function getProviderTab(provider, senderTabId) {
   const cfg = PROVIDERS[provider];
   const key = `win_${provider}`;
@@ -32,30 +31,30 @@ async function getProviderTab(provider, senderTabId) {
 
   if (saved) {
     try {
-      // Check if the window still exists
       const win = await chrome.windows.get(saved.windowId, { populate: true });
       const tab = win.tabs.find(t => t.id === saved.tabId);
       if (tab && tab.url && tab.url.startsWith(cfg.origin)) {
-        // IMPORTANT: Restore the window to 'normal' state so the browser unthrottles engine execution
         await chrome.windows.update(saved.windowId, { state: "normal", focused: true });
         return tab;
       }
-    } catch { /* window or tab was closed by user, proceed to recreate */ }
+    } catch { /* closed, recreate */ }
   }
 
-  let screenW = 1280;
+  let screenW = 1280, screenH = 800;
   try {
     const size = await getScreenSize(senderTabId);
     screenW = size.w;
+    screenH = size.h;
   } catch {}
 
+  // Position it precisely at the bottom right corner
   const win = await chrome.windows.create({
     url:     cfg.url,
     type:    "popup", 
     width:   100,
     height:  100,
-    left:    Math.max(0, screenW - 390),
-    top:     Math.max(0, screenH),
+    left:    Math.max(0, screenW - 120),
+    top:     Math.max(0, screenH - 120),
     focused: true, 
   });
 
@@ -91,7 +90,7 @@ async function waitForContentScript(tabId) {
         });
       });
       if (reply?.status === "OK") return;
-    } catch { /* not ready yet */ }
+    } catch { /* not ready */ }
     await sleep(300);
   }
   throw new Error("Provider page took too long to load.");
@@ -126,11 +125,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         providerTab.id,
         { action: "SEND_PROMPT", provider: message.provider, prompt: message.prompt, imageData },
         response => {
-          // Minimize the window instantly after response is extracted to hide it from user view
           if (targetWindowId) {
             chrome.windows.update(targetWindowId, { state: "minimized" }).catch(() => {});
           }
-
           if (chrome.runtime.lastError) {
             sendResponse({ error: "Lost connection to provider tab. Please try again." });
           } else {
@@ -141,8 +138,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     } catch (err) {
       console.error("[HuluHub BG]", err);
       sendResponse({ error: err.message });
-      
-      // Safety step: clear out visual workspace error state by hiding it anyway
       if (targetWindowId) {
         chrome.windows.update(targetWindowId, { state: "minimized" }).catch(() => {});
       }
