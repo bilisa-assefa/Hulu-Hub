@@ -52,10 +52,10 @@ async function getProviderTab(provider, senderTabId) {
   const win = await chrome.windows.create({
     url:     cfg.url,
     type:    "popup", 
-    width:   380,
-    height:  520,
+    width:   100,
+    height:  100,
     left:    Math.max(0, screenW - 390),
-    top:     50,
+    top:     Math.max(0, screenH),
     focused: true, 
   });
 
