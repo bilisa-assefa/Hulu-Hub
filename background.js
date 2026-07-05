@@ -1,5 +1,5 @@
 /**
- * Hulu Hub — Background Service Worker v3.2
+ * Hulu Hub — Background Service Worker v3.2 (Auto-Close Fix)
  */
 
 "use strict";
@@ -21,44 +21,6 @@ async function getScreenSize(senderTabId) {
     if (results && results[0] && results[0].result) return results[0].result;
   } catch { /* fallback below */ }
   return { w: 1280, h: 800 };
-}
-
-async function getProviderTab(provider, senderTabId) {
-  const cfg = PROVIDERS[provider];
-  const key = `win_${provider}`;
-  const stored = await chrome.storage.session.get(key);
-  const saved  = stored[key];
-
-  if (saved) {
-    try {
-      const tab = await chrome.tabs.get(saved.tabId);
-      if (tab.url && tab.url.startsWith(cfg.origin)) {
-        return tab;
-      }
-    } catch { /* closed */ }
-  }
-
-  let screenW = 1280;
-  try {
-    const size = await getScreenSize(senderTabId);
-    screenW = size.w;
-  } catch {}
-
-  // Position it right at the absolute edge boundary line 
-  // keeping it alive without disrupting focus flow hooks.
-  const win = await chrome.windows.create({
-    url:    cfg.url,
-    type:   "popup", 
-    width:  450,
-    height: 700,
-    left:   Math.max(0, screenW - 460),
-    top:    40,
-    focused: false, 
-  });
-
-  const tab = win.tabs[0];
-  await chrome.storage.session.set({ [key]: { windowId: win.id, tabId: tab.id } });
-  return tab;
 }
 
 function waitForTabLoad(tabId) {
@@ -89,7 +51,7 @@ async function waitForContentScript(tabId) {
       });
       if (reply?.status === "OK") return;
     } catch { /* not ready yet */ }
-    await sleep(400);
+    await sleep(300);
   }
   throw new Error("Provider page took too long to load.");
 }
@@ -107,12 +69,33 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action !== "SEND_TO_PROVIDER") return false;
 
   (async () => {
+    let createdWindowId = null;
     try {
       const senderTabId = sender.tab?.id;
       const imageData   = message.attachScreenshot && senderTabId
         ? await captureScreenshot(senderTabId) : null;
 
-      const providerTab = await getProviderTab(message.provider, senderTabId);
+      const cfg = PROVIDERS[message.provider];
+      let screenW = 1280;
+      try {
+        const size = await getScreenSize(senderTabId);
+        screenW = size.w;
+      } catch {}
+
+      // Optimized small size so DOM elements render correctly but stay out of the way
+      const win = await chrome.windows.create({
+        url:     cfg.url,
+        type:    "popup", 
+        width:   380,
+        height:  520,
+        left:    Math.max(0, screenW - 390),
+        top:     50,
+        focused: true, // Must be true to prevent browser engine throttling
+      });
+
+      createdWindowId = win.id;
+      const providerTab = win.tabs[0];
+
       await waitForTabLoad(providerTab.id);
       await waitForContentScript(providerTab.id);
 
@@ -120,15 +103,27 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         providerTab.id,
         { action: "SEND_PROMPT", provider: message.provider, prompt: message.prompt, imageData },
         response => {
-          if (chrome.runtime.lastError)
+          // Always clean up the temporary window when tab responds
+          if (createdWindowId) {
+            chrome.windows.remove(createdWindowId).catch(() => {});
+            createdWindowId = null;
+          }
+
+          if (chrome.runtime.lastError) {
             sendResponse({ error: "Lost connection to provider tab. Please try again." });
-          else
+          } else {
             sendResponse(response);
+          }
         }
       );
     } catch (err) {
       console.error("[HuluHub BG]", err);
       sendResponse({ error: err.message });
+      
+      // Cleanup window in case of setup failure
+      if (createdWindowId) {
+        chrome.windows.remove(createdWindowId).catch(() => {});
+      }
     }
   })();
 
