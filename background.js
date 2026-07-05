@@ -1,5 +1,5 @@
 /**
- * Hulu Hub — Background Service Worker v3.4 (Bottom-Right Mini-Window)
+ * Hulu Hub — Background Service Worker v3.5 (Delay Minimization Fix)
  */
 
 "use strict";
@@ -47,14 +47,13 @@ async function getProviderTab(provider, senderTabId) {
     screenH = size.h;
   } catch {}
 
-  // Position it precisely at the bottom right corner
   const win = await chrome.windows.create({
     url:     cfg.url,
     type:    "popup", 
-    width:   100,
-    height:  100,
-    left:    Math.max(0, screenW - 120),
-    top:     Math.max(0, screenH - 120),
+    width:   150,
+    height:  150,
+    left:    Math.max(0, screenW - 170),
+    top:     Math.max(0, screenH - 170),
     focused: true, 
   });
 
@@ -91,7 +90,7 @@ async function waitForContentScript(tabId) {
       });
       if (reply?.status === "OK") return;
     } catch { /* not ready */ }
-    await sleep(300);
+    await sleep(400);
   }
   throw new Error("Provider page took too long to load.");
 }
@@ -121,13 +120,19 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       await waitForTabLoad(providerTab.id);
       await waitForContentScript(providerTab.id);
 
+      // Give window a short delay to focus completely
+      await sleep(400); 
+
       chrome.tabs.sendMessage(
         providerTab.id,
         { action: "SEND_PROMPT", provider: message.provider, prompt: message.prompt, imageData },
-        response => {
+        async (response) => {
+          // Provide an execution window for content.js to finalize variables before hiding
+          await sleep(1000); 
           if (targetWindowId) {
             chrome.windows.update(targetWindowId, { state: "minimized" }).catch(() => {});
           }
+
           if (chrome.runtime.lastError) {
             sendResponse({ error: "Lost connection to provider tab. Please try again." });
           } else {
@@ -139,6 +144,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       console.error("[HuluHub BG]", err);
       sendResponse({ error: err.message });
       if (targetWindowId) {
+        await sleep(500);
         chrome.windows.update(targetWindowId, { state: "minimized" }).catch(() => {});
       }
     }
