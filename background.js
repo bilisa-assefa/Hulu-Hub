@@ -1,5 +1,5 @@
 /**
- * Hulu Hub — Background Service Worker v3.7 (Instant Bottom-Right Workspace Fix)
+ * Hulu Hub — Background Service Worker v3.8 (Bounds Error & Focus Fix)
  */
 
 "use strict";
@@ -18,33 +18,27 @@ async function getProviderTab(provider) {
   const stored = await chrome.storage.session.get(key);
   const saved  = stored[key];
 
-  // Fallback safe monitor sizing coordinates
-  const screenW = 1920;
-  const screenH = 1080;
-  const winLeft = Math.max(0, screenW - 120);
-  const winTop = Math.max(0, screenH - 120);
-
   if (saved) {
     try {
       const win = await chrome.windows.get(saved.windowId, { populate: true });
       const tab = win.tabs.find(t => t.id === saved.tabId);
       if (tab && tab.url && tab.url.startsWith(cfg.origin)) {
-        // Pop back to active visibility bounds inside the bottom right corner
-        await chrome.windows.update(saved.windowId, { left: winLeft, top: winTop, state: "normal", focused: true });
+        // Just make sure it is awake
+        await chrome.windows.update(saved.windowId, { state: "normal" });
         return tab;
       }
     } catch { /* closed, recreate */ }
   }
 
-  // Create popup directly at the absolute bottom right corner
+  // Safely place the window inside physical bounds (top-left) to avoid Chrome's 50% restriction
   const win = await chrome.windows.create({
     url:     cfg.url,
     type:    "popup", 
     width:   120,
     height:  120,
-    left:    winLeft,
-    top:     winTop,
-    focused: true, 
+    left:    10,
+    top:     10,
+    focused: false, // Let it spawn without stealing main focus immediately
   });
 
   const tab = win.tabs[0];
@@ -101,6 +95,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     let targetWindowId = null;
     try {
       const senderTabId = sender.tab?.id;
+      const senderWindowId = sender.tab?.windowId;
       const imageData   = message.attachScreenshot && senderTabId
         ? await captureScreenshot(senderTabId) : null;
 
@@ -116,9 +111,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         providerTab.id,
         { action: "SEND_PROMPT", provider: message.provider, prompt: message.prompt, imageData },
         response => {
-          // IMMEDIATE DISMISSAL: Move window offscreen immediately without any artificial delay blocks
-          if (targetWindowId) {
-            chrome.windows.update(targetWindowId, { left: 9999, top: 9999, focused: false }).catch(() => {});
+          // BURY STRATEGY: Instead of minimizing or moving off-screen, bring the user's main window forward.
+          // This hides the AI window behind the current browser session, keeping it safe and fully executing!
+          if (targetWindowId && senderWindowId) {
+            chrome.windows.update(targetWindowId, { focused: false }).catch(() => {});
+            chrome.windows.update(senderWindowId, { focused: true }).catch(() => {});
           }
 
           if (chrome.runtime.lastError) {
@@ -131,8 +128,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     } catch (err) {
       console.error("[HuluHub BG]", err);
       sendResponse({ error: err.message });
-      if (targetWindowId) {
-        chrome.windows.update(targetWindowId, { left: 9999, top: 9999, focused: false }).catch(() => {});
+      
+      // Fallback cleanup
+      if (targetWindowId && sender?.tab?.windowId) {
+        chrome.windows.update(targetWindowId, { focused: false }).catch(() => {});
+        chrome.windows.update(sender.tab.windowId, { focused: true }).catch(() => {});
       }
     }
   })();
