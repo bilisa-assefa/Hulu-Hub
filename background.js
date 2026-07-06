@@ -21,8 +21,8 @@ async function getProviderTab(provider) {
   // Fallback safe monitor sizing coordinates
   const screenW = 1920;
   const screenH = 1080;
-  const winLeft = Math.max(0, screenW - 160);
-  const winTop = Math.max(0, screenH - 160);
+  const winLeft = Math.max(0, screenW - 120);
+  const winTop = Math.max(0, screenH - 120);
 
   if (saved) {
     try {
