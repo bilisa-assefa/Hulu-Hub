@@ -1,5 +1,5 @@
 /**
- * Hulu Hub — Background Service Worker v3.6 (Off-Screen Execution Fix)
+ * Hulu Hub — Background Service Worker v3.7 (Instant Bottom-Right Workspace Fix)
  */
 
 "use strict";
@@ -18,26 +18,32 @@ async function getProviderTab(provider) {
   const stored = await chrome.storage.session.get(key);
   const saved  = stored[key];
 
+  // Fallback safe monitor sizing coordinates
+  const screenW = 1920;
+  const screenH = 1080;
+  const winLeft = Math.max(0, screenW - 160);
+  const winTop = Math.max(0, screenH - 160);
+
   if (saved) {
     try {
       const win = await chrome.windows.get(saved.windowId, { populate: true });
       const tab = win.tabs.find(t => t.id === saved.tabId);
       if (tab && tab.url && tab.url.startsWith(cfg.origin)) {
-        // Bring window back to the visible corner workspace area
-        await chrome.windows.update(saved.windowId, { left: 20, top: 20, focused: true });
+        // Pop back to active visibility bounds inside the bottom right corner
+        await chrome.windows.update(saved.windowId, { left: winLeft, top: winTop, state: "normal", focused: true });
         return tab;
       }
     } catch { /* closed, recreate */ }
   }
 
-  // Instantly create a ultra-mini workspace popup (Removed script-injection sizing delay)
+  // Create popup directly at the absolute bottom right corner
   const win = await chrome.windows.create({
     url:     cfg.url,
     type:    "popup", 
     width:   120,
     height:  120,
-    left:    20,
-    top:     20,
+    left:    winLeft,
+    top:     winTop,
     focused: true, 
   });
 
@@ -104,15 +110,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       await waitForTabLoad(providerTab.id);
       await waitForContentScript(providerTab.id);
 
-      // Brief layout stabilization sleep
-      await sleep(300); 
+      await sleep(200); 
 
       chrome.tabs.sendMessage(
         providerTab.id,
         { action: "SEND_PROMPT", provider: message.provider, prompt: message.prompt, imageData },
         response => {
-          // Pure Hidden Strategy: Move window off-screen boundary instead of minimizing.
-          // This ensures Claude's browser engine stays 100% active without dropping connection!
+          // IMMEDIATE DISMISSAL: Move window offscreen immediately without any artificial delay blocks
           if (targetWindowId) {
             chrome.windows.update(targetWindowId, { left: 9999, top: 9999, focused: false }).catch(() => {});
           }
