@@ -225,4 +225,4 @@
   })();
 
   console.log("[HuluHub] UI ready on", window.location.hostname);
-})();
+)();
