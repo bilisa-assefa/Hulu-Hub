@@ -1,5 +1,5 @@
 /**
- * Hulu Hub — Floating UI v3.5 (Pure Dark Theme Edition)
+ * Hulu Hub — Floating UI v3.6 (Smooth Drag & Dark Theme Edition)
  */
 
 "use strict";
@@ -247,21 +247,23 @@
   let isBusy           = false;
   let unreadCount      = 0;
 
-  // --- DRAG AND DROP SYSTEM ---
+  // --- LAG-FREE DRAG AND DROP SYSTEM ---
   let isDragging = false;
   let startX = 0, startY = 0;
   let btnLeft = 28, btnBottom = 28;
+  
+  // Track positional states purely in Left/Top values during dragging animation frames
+  let currentDragLeft = 0;
+  let currentDragTop = 0;
+  let ticking = false;
 
   chrome.storage.local.get(["hubBtnLeft", "hubBtnBottom"], (data) => {
-    if (data.hubBtnLeft !== undefined) {
-      btnLeft = data.hubBtnLeft;
-      hubBtn.style.left = `${btnLeft}px`;
-      hubBtn.style.right = "auto";
-    }
-    if (data.hubBtnBottom !== undefined) {
-      btnBottom = data.hubBtnBottom;
-      hubBtn.style.bottom = `${btnBottom}px`;
-    }
+    if (data.hubBtnLeft !== undefined) btnLeft = data.hubBtnLeft;
+    if (data.hubBtnBottom !== undefined) btnBottom = data.hubBtnBottom;
+    
+    hubBtn.style.left = `${btnLeft}px`;
+    hubBtn.style.right = "auto";
+    hubBtn.style.bottom = `${btnBottom}px`;
     repositionPanel();
   });
 
@@ -279,28 +281,33 @@
     const initialLeft = hubBtn.offsetLeft;
     const initialTop = hubBtn.offsetTop;
 
+    function updatePosition() {
+      hubBtn.style.left = `${currentDragLeft}px`;
+      hubBtn.style.top = `${currentDragTop}px`;
+      hubBtn.style.bottom = "auto";
+      
+      // Force panel to chase smoothly matching offsets
+      panel.style.left = `${currentDragLeft}px`;
+      panel.style.bottom = `${window.innerHeight - currentDragTop + 12}px`;
+      ticking = false;
+    }
+
     function onMouseMove(moveEvent) {
       const deltaX = moveEvent.clientX - startX;
       const deltaY = moveEvent.clientY - startY;
 
-      if (Math.abs(deltaX) > 4 || Math.abs(deltaY) > 4) {
+      if (!isDragging && (Math.abs(deltaX) > 4 || Math.abs(deltaY) > 4)) {
         isDragging = true;
       }
 
       if (isDragging) {
-        let newLeft = initialLeft + deltaX;
-        let newTop = initialTop + deltaY;
+        currentDragLeft = Math.max(10, Math.min(window.innerWidth - 64, initialLeft + deltaX));
+        currentDragTop = Math.max(10, Math.min(window.innerHeight - 64, initialTop + deltaY));
 
-        newLeft = Math.max(10, Math.min(window.innerWidth - 64, newLeft));
-        newTop = Math.max(10, Math.min(window.innerHeight - 64, newTop));
-
-        btnLeft = newLeft;
-        btnBottom = window.innerHeight - (newTop + 54);
-
-        hubBtn.style.left = `${btnLeft}px`;
-        hubBtn.style.right = "auto";
-        hubBtn.style.bottom = `${btnBottom}px`;
-        repositionPanel();
+        if (!ticking) {
+          window.requestAnimationFrame(updatePosition);
+          ticking = true;
+        }
       }
     }
 
@@ -309,6 +316,14 @@
       document.removeEventListener("mouseup", onMouseUp);
 
       if (isDragging) {
+        btnLeft = hubBtn.offsetLeft;
+        btnBottom = window.innerHeight - (hubBtn.offsetTop + 54);
+        
+        // Re-align variables back to structural CSS standards
+        hubBtn.style.bottom = `${btnBottom}px`;
+        hubBtn.style.top = "auto";
+        repositionPanel();
+        
         chrome.storage.local.set({ hubBtnLeft: btnLeft, hubBtnBottom: btnBottom });
       }
     }
