@@ -1,5 +1,5 @@
 /**
- * Hulu Hub — Background Service Worker v3.5 (Delay Minimization Fix)
+ * Hulu Hub — Background Service Worker v3.6 (Off-Screen Execution Fix)
  */
 
 "use strict";
@@ -12,18 +12,7 @@ const PROVIDERS = {
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-async function getScreenSize(senderTabId) {
-  try {
-    const results = await chrome.scripting.executeScript({
-      target: { tabId: senderTabId },
-      func:   () => ({ w: window.screen.availWidth, h: window.screen.availHeight }),
-    });
-    if (results && results[0] && results[0].result) return results[0].result;
-  } catch { /* fallback below */ }
-  return { w: 1280, h: 800 };
-}
-
-async function getProviderTab(provider, senderTabId) {
+async function getProviderTab(provider) {
   const cfg = PROVIDERS[provider];
   const key = `win_${provider}`;
   const stored = await chrome.storage.session.get(key);
@@ -34,26 +23,21 @@ async function getProviderTab(provider, senderTabId) {
       const win = await chrome.windows.get(saved.windowId, { populate: true });
       const tab = win.tabs.find(t => t.id === saved.tabId);
       if (tab && tab.url && tab.url.startsWith(cfg.origin)) {
-        await chrome.windows.update(saved.windowId, { state: "normal", focused: true });
+        // Bring window back to the visible corner workspace area
+        await chrome.windows.update(saved.windowId, { left: 20, top: 20, focused: true });
         return tab;
       }
     } catch { /* closed, recreate */ }
   }
 
-  let screenW = 1280, screenH = 800;
-  try {
-    const size = await getScreenSize(senderTabId);
-    screenW = size.w;
-    screenH = size.h;
-  } catch {}
-
+  // Instantly create a ultra-mini workspace popup (Removed script-injection sizing delay)
   const win = await chrome.windows.create({
     url:     cfg.url,
     type:    "popup", 
-    width:   150,
-    height:  150,
-    left:    Math.max(0, screenW - 170),
-    top:     Math.max(0, screenH - 170),
+    width:   120,
+    height:  120,
+    left:    20,
+    top:     20,
     focused: true, 
   });
 
@@ -90,7 +74,7 @@ async function waitForContentScript(tabId) {
       });
       if (reply?.status === "OK") return;
     } catch { /* not ready */ }
-    await sleep(400);
+    await sleep(300);
   }
   throw new Error("Provider page took too long to load.");
 }
@@ -114,23 +98,23 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       const imageData   = message.attachScreenshot && senderTabId
         ? await captureScreenshot(senderTabId) : null;
 
-      const providerTab = await getProviderTab(message.provider, senderTabId);
+      const providerTab = await getProviderTab(message.provider);
       targetWindowId = providerTab.windowId;
 
       await waitForTabLoad(providerTab.id);
       await waitForContentScript(providerTab.id);
 
-      // Give window a short delay to focus completely
-      await sleep(400); 
+      // Brief layout stabilization sleep
+      await sleep(300); 
 
       chrome.tabs.sendMessage(
         providerTab.id,
         { action: "SEND_PROMPT", provider: message.provider, prompt: message.prompt, imageData },
-        async (response) => {
-          // Provide an execution window for content.js to finalize variables before hiding
-          await sleep(1000); 
+        response => {
+          // Pure Hidden Strategy: Move window off-screen boundary instead of minimizing.
+          // This ensures Claude's browser engine stays 100% active without dropping connection!
           if (targetWindowId) {
-            chrome.windows.update(targetWindowId, { state: "minimized" }).catch(() => {});
+            chrome.windows.update(targetWindowId, { left: 9999, top: 9999, focused: false }).catch(() => {});
           }
 
           if (chrome.runtime.lastError) {
@@ -144,8 +128,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       console.error("[HuluHub BG]", err);
       sendResponse({ error: err.message });
       if (targetWindowId) {
-        await sleep(500);
-        chrome.windows.update(targetWindowId, { state: "minimized" }).catch(() => {});
+        chrome.windows.update(targetWindowId, { left: 9999, top: 9999, focused: false }).catch(() => {});
       }
     }
   })();
