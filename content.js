@@ -1,6 +1,3 @@
-/**
- * Hulu Hub — AI Provider Content Script v3.5 (Selector Fixes)
- */
 
 "use strict";
 
@@ -23,7 +20,7 @@ if (!window.__HULU_HUB_INJECTED) {
       input:            ["#prompt-textarea", "textarea", "[contenteditable='true']"],
       sendButton:       ['button[data-testid="send-button"]', 'button[aria-label="Send prompt"]', 'button.mb-1'],
       stopButton:       ['button[data-testid="stop-button"]', 'button[aria-label="Stop"]'],
-      assistantMessage: 'div[data-message-author-role="assistant"]',
+      assistantMessage: ['div[data-message-author-role="assistant"]', '.prose', '.markdown'],
     },
     extractText(el) {
       if (!el) return "";
@@ -36,14 +33,14 @@ if (!window.__HULU_HUB_INJECTED) {
   const Claude = {
     name: "claude",
     selectors: {
-      input:            ['div[contenteditable="true"]', '.ProseMirror', '[role="textbox"]'],
-      sendButton:       ['button[aria-label="Send Message"]', 'button[aria-label="Send message"]', 'button:has(svg path[d*="M"])'],
-      stopButton:       ['button[aria-label="Stop"]', 'button[aria-label="Stop Response"]'],
-      assistantMessage: ['div.font-claude-message', '[data-testid="assistant-message"]', '.font-user-message + div'],
+      input:            ['div[contenteditable="true"]', '.ProseMirror', '[role="textbox"]', 'textarea'],
+      sendButton:       ['button[aria-label*="Send"]', 'button[aria-label*="send"]', 'button:has(svg)'],
+      stopButton:       ['button[aria-label*="Stop"]', 'button[aria-label*="stop"]'],
+      assistantMessage: ['.font-claude-message', '[data-testid="assistant-message"]', '.prose', 'div[data-is-streaming]'],
     },
     extractText(el) {
       if (!el) return "";
-      let container = el.querySelector('.grid-cols-1 .whitespace-pre-wrap') || el.querySelector('[class*="prose"]') || el;
+      let container = el.querySelector('.whitespace-pre-wrap') || el.querySelector('[class*="prose"]') || el;
       let raw = (container.innerText || container.textContent || "");
       return raw.replace(/[▋●■]$/, "").replace(/^Claude responded:\s*/i, "").trim();
     },
@@ -58,7 +55,7 @@ if (!window.__HULU_HUB_INJECTED) {
       input:            ['rich-textarea div[contenteditable="true"]', 'div[contenteditable="true"]', 'textarea'],
       sendButton:       ['button[aria-label="Send message"]', 'button[aria-label="Send Message"]'],
       stopButton:       ['button[aria-label="Stop response"]'],
-      assistantMessage: ["model-response", ".response-content"],
+      assistantMessage: ["model-response", ".response-content", ".prose"],
     },
     extractText(el) {
       if (!el) return "";
