@@ -1,6 +1,4 @@
-/**
- * Hulu Hub — Floating UI v3.6 (Smooth Drag & Dark Theme Edition)
- */
+
 
 "use strict";
 
@@ -112,10 +110,27 @@
     .hub-logo-sm { width: 28px; height: 28px; border-radius: 8px; background: rgba(11,18,32,0.3); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .hub-logo-sm svg { width: 18px; height: 18px; }
     .hub-header h3 { font-size: 15px; font-weight: 600; color: #0B1220; letter-spacing: -0.01em; }
+    
     .hub-provider-wrap { position: relative; }
-    #hub-provider { appearance: none; -webkit-appearance: none; padding: 5px 26px 5px 10px; border-radius: 8px; border: 1px solid rgba(11,18,32,0.2); font-size: 12px; font-weight: 600; background: rgba(255,255,255,0.25); color: #0B1220; cursor: pointer; outline: none; font-family: inherit; }
-    #hub-provider option { background: #4D5DFF; color: #fff; }
+    
+    /* DROPDOWN OPACITY & BLACK TEXT FIX */
+    #hub-provider { 
+      appearance: none; 
+      -webkit-appearance: none; 
+      padding: 5px 26px 5px 10px; 
+      border-radius: 8px; 
+      border: 1px solid rgba(11,18,32,0.2); 
+      font-size: 12px; 
+      font-weight: 700; 
+      background: rgba(46, 242, 196, 0.45); 
+      color: #000000; 
+      cursor: pointer; 
+      outline: none; 
+      font-family: inherit; 
+    }
+    #hub-provider option { background: #ffffff; color: #000000; font-weight: 600; }
     .hub-provider-arrow { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); pointer-events: none; color: #0B1220; font-size: 10px; }
+    
     #hub-close-btn { width: 28px; height: 28px; border-radius: 8px; border: none; background: rgba(11,18,32,0.15); color: #0B1220; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; transition: background 0.15s; font-family: inherit; }
     #hub-close-btn:hover { background: rgba(11,18,32,0.3); }
 
@@ -247,12 +262,11 @@
   let isBusy           = false;
   let unreadCount      = 0;
 
-  // --- LAG-FREE DRAG AND DROP SYSTEM ---
+  // --- DRAG AND DROP SYSTEM ---
   let isDragging = false;
   let startX = 0, startY = 0;
   let btnLeft = 28, btnBottom = 28;
   
-  // Track positional states purely in Left/Top values during dragging animation frames
   let currentDragLeft = 0;
   let currentDragTop = 0;
   let ticking = false;
@@ -286,7 +300,6 @@
       hubBtn.style.top = `${currentDragTop}px`;
       hubBtn.style.bottom = "auto";
       
-      // Force panel to chase smoothly matching offsets
       panel.style.left = `${currentDragLeft}px`;
       panel.style.bottom = `${window.innerHeight - currentDragTop + 12}px`;
       ticking = false;
@@ -319,7 +332,6 @@
         btnLeft = hubBtn.offsetLeft;
         btnBottom = window.innerHeight - (hubBtn.offsetTop + 54);
         
-        // Re-align variables back to structural CSS standards
         hubBtn.style.bottom = `${btnBottom}px`;
         hubBtn.style.top = "auto";
         repositionPanel();
