@@ -209,14 +209,7 @@
       <div class="hub-header">
         <div class="hub-header-left">
           <div class="hub-logo-sm">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
-              <rect x="10" y="16" width="4" height="20" rx="1.5" fill="#ffffff"/>
-              <rect x="10" y="24" width="10" height="4"  rx="1.5" fill="#ffffff"/>
-              <rect x="16" y="16" width="4" height="20" rx="1.5" fill="#ffffff"/>
-              <rect x="22" y="16" width="4" height="20" rx="1.5" fill="#ffffff"/>
-              <rect x="22" y="24" width="10" height="4"  rx="1.5" fill="#ffffff"/>
-              <rect x="28" y="16" width="4" height="20" rx="1.5" fill="#ffffff"/>
-            </svg>
+            ${LOGO_SVG}
           </div>
           <h3>Hulu Hub</h3>
         </div>
