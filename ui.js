@@ -109,7 +109,7 @@
       gap: 10px; 
     }
     .hub-header-left { display: flex; align-items: center; gap: 9px; }
-    .hub-logo-sm { width: 40px; height: 40px; border-radius: 8px; background: rgba(11,18,32,0.3); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .hub-logo-sm { width: 40px; height: 40px; border-radius: 8px;  display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .hub-logo-sm svg { width: 40px; height: 40px; }
     .hub-header h3 { font-size: 15px; font-weight: 600; color: #0B1220; letter-spacing: -0.01em; }
     
@@ -279,7 +279,7 @@
       <div class="hub-header">
         <div class="hub-header-left">
           <div class="hub-logo-sm">
-           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="128" height="128">
+           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="40" height="60">
   <defs>
     <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#2EF2C4"/>
