@@ -34,7 +34,12 @@ if (!window.__HULU_HUB_INJECTED) {
     name: "claude",
     selectors: {
       input:            ['div[contenteditable="true"]', '.ProseMirror', '[role="textbox"]', 'textarea'],
-      sendButton:       ['button[aria-label*="Send"]', 'button[aria-label*="send"]', 'button:has(svg)'],
+      // FIX: removed the 'button:has(svg)' wildcard fallback. It matched
+      // the FIRST button anywhere on the page containing an <svg> (sidebar
+      // toggles, copy icons, avatar menus, etc.) whenever the real Send
+      // button wasn't found in time — causing a silent click on the wrong
+      // element, so the prompt was injected but never actually submitted.
+      sendButton:       ['button[aria-label*="Send"]', 'button[aria-label*="send"]'],
       stopButton:       ['button[aria-label*="Stop"]', 'button[aria-label*="stop"]'],
       assistantMessage: ['.font-claude-message', '[data-testid="assistant-message"]', '.prose', 'div[data-is-streaming]'],
     },
@@ -44,8 +49,16 @@ if (!window.__HULU_HUB_INJECTED) {
       let raw = (container.innerText || container.textContent || "");
       return raw.replace(/[▋●■]$/, "").replace(/^Claude responded:\s*/i, "").trim();
     },
+    // FIX: hasAttribute() only checks whether the attribute exists, not its
+    // value. Claude sets data-is-streaming="false" when done rather than
+    // removing the attribute, so hasAttribute() was always true — meaning
+    // this function could never report "not streaming," and every Claude
+    // response had to fall all the way through to the 120-second hard
+    // timeout instead of resolving within ~2.5s like ChatGPT and Gemini do.
     isNodeStreaming(node) {
-      return node ? node.hasAttribute("data-is-streaming") || !!document.querySelector('button[aria-label*="Stop"]') : false;
+      const attrStreaming = node ? node.getAttribute("data-is-streaming") === "true" : false;
+      const stopBtnVisible = !!document.querySelector('button[aria-label*="Stop"]');
+      return attrStreaming || stopBtnVisible;
     },
   };
 

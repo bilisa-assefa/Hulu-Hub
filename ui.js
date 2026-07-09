@@ -191,6 +191,76 @@
     #hub-send-btn:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
     #hub-send-btn:active:not(:disabled){ transform: translateY(0); }
     #hub-send-btn:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
+
+    /* ── Attachment preview (paste or screenshot) ── */
+    #hub-attach-preview {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 8px;
+      border-radius: 10px;
+      background: #0a0a0a;
+      border: 1px solid #1c1c1e;
+    }
+    #hub-attach-preview.show { display: flex; }
+    #hub-attach-thumb {
+      width: 36px;
+      height: 36px;
+      border-radius: 7px;
+      object-fit: cover;
+      cursor: pointer;
+      border: 1px solid #2c2c2e;
+      flex-shrink: 0;
+      transition: transform 0.12s;
+    }
+    #hub-attach-thumb:hover { transform: scale(1.06); }
+    #hub-attach-label { flex: 1; font-size: 12px; color: #a1a1aa; font-weight: 500; }
+    #hub-attach-remove {
+      width: 22px; height: 22px;
+      border-radius: 6px;
+      border: none;
+      background: #1c1c1e;
+      color: #a1a1aa;
+      font-size: 11px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.15s, color 0.15s;
+    }
+    #hub-attach-remove:hover { background: #2c2c2e; color: #fff; }
+
+    /* ── Lightbox (click thumbnail to view full size) ── */
+    #hub-lightbox {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.86);
+      z-index: 2147483647;
+      align-items: center;
+      justify-content: center;
+      pointer-events: auto;
+    }
+    #hub-lightbox.show { display: flex; }
+    #hub-lightbox-img {
+      max-width: 90vw;
+      max-height: 90vh;
+      border-radius: 12px;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.6);
+    }
+    #hub-lightbox-close {
+      position: fixed;
+      top: 20px; right: 20px;
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      border: none;
+      background: rgba(255,255,255,0.12);
+      color: #fff;
+      font-size: 16px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s;
+    }
+    #hub-lightbox-close:hover { background: rgba(255,255,255,0.24); }
   `;
   shadow.appendChild(styleEl);
 
@@ -209,7 +279,14 @@
       <div class="hub-header">
         <div class="hub-header-left">
           <div class="hub-logo-sm">
-            ${LOGO_SVG}
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+              <rect x="10" y="16" width="4" height="20" rx="1.5" fill="#ffffff"/>
+              <rect x="10" y="24" width="10" height="4"  rx="1.5" fill="#ffffff"/>
+              <rect x="16" y="16" width="4" height="20" rx="1.5" fill="#ffffff"/>
+              <rect x="22" y="16" width="4" height="20" rx="1.5" fill="#ffffff"/>
+              <rect x="22" y="24" width="10" height="4"  rx="1.5" fill="#ffffff"/>
+              <rect x="28" y="16" width="4" height="20" rx="1.5" fill="#ffffff"/>
+            </svg>
           </div>
           <h3>Hulu Hub</h3>
         </div>
@@ -230,12 +307,22 @@
         </div>
       </div>
       <div class="hub-input-area">
+        <div id="hub-attach-preview">
+          <img id="hub-attach-thumb" alt="Attached image"/>
+          <span id="hub-attach-label">Image attached</span>
+          <button id="hub-attach-remove" title="Remove image">✕</button>
+        </div>
         <textarea id="hub-input" placeholder="Ask anything… (Enter to send, Shift+Enter for new line)"></textarea>
         <div class="hub-actions">
           <button id="hub-ss-btn">📷 Screenshot</button>
           <button id="hub-send-btn">Send →</button>
         </div>
       </div>
+    </div>
+
+    <div id="hub-lightbox">
+      <button id="hub-lightbox-close" title="Close">✕</button>
+      <img id="hub-lightbox-img" alt="Full size preview"/>
     </div>
   `;
   shadow.appendChild(wrapper);
@@ -250,12 +337,47 @@
   const provider = shadow.getElementById("hub-provider");
   const closeBtn = shadow.getElementById("hub-close-btn");
 
+  const attachPreview = shadow.getElementById("hub-attach-preview");
+  const attachThumb   = shadow.getElementById("hub-attach-thumb");
+  const attachLabel   = shadow.getElementById("hub-attach-label");
+  const attachRemove  = shadow.getElementById("hub-attach-remove");
+  const lightbox       = shadow.getElementById("hub-lightbox");
+  const lightboxImg    = shadow.getElementById("hub-lightbox-img");
+  const lightboxClose  = shadow.getElementById("hub-lightbox-close");
+
   let panelOpen        = false;
-  let screenshotActive = false;
   let messages         = [];
   let loadingEl        = null;
   let isBusy           = false;
   let unreadCount      = 0;
+
+  // Unified attachment state — populated by either pasting an image into
+  // the textarea, or clicking the screenshot button. Only one image can be
+  // attached at a time; the newer action replaces the older one.
+  let attachedImage  = null; // data URL string, or null
+  let attachedSource = null; // "paste" | "screenshot"
+
+  function setAttachedImage(dataUrl, source) {
+    attachedImage  = dataUrl;
+    attachedSource = source;
+    attachThumb.src = dataUrl;
+    attachLabel.textContent = source === "screenshot" ? "Screenshot attached" : "Image attached";
+    attachPreview.classList.add("show");
+  }
+  function clearAttachedImage() {
+    attachedImage  = null;
+    attachedSource = null;
+    attachThumb.src = "";
+    attachPreview.classList.remove("show");
+  }
+  function openLightbox(dataUrl) {
+    lightboxImg.src = dataUrl;
+    lightbox.classList.add("show");
+  }
+  function closeLightbox() {
+    lightbox.classList.remove("show");
+    lightboxImg.src = "";
+  }
 
   // --- LAG-FREE DRAG AND DROP SYSTEM ---
   let isDragging = false;
@@ -387,9 +509,24 @@
 
   // Wrap listener registration safely
   try {
-    chrome.runtime.onMessage.addListener((request) => {
+    chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
       if (request.action === "TOGGLE_HUB_PANEL") {
         togglePanel();
+        return;
+      }
+      // Hide/show the entire widget around a background screenshot capture,
+      // so the widget never appears in the captured image. Toggling display
+      // on the shadow HOST element (root) removes the whole shadow tree from
+      // rendering instantly, with no CSS transition to wait out.
+      if (request.action === "HIDE_HUB_WIDGET") {
+        root.style.display = "none";
+        sendResponse({ ok: true });
+        return;
+      }
+      if (request.action === "SHOW_HUB_WIDGET") {
+        root.style.display = "";
+        sendResponse({ ok: true });
+        return;
       }
     });
   } catch(e) {}
@@ -495,8 +632,9 @@
     const text = input.value.trim();
     if (!text) return;
     const p = provider.value;
+    const imageToSend = attachedImage;
 
-    messages.push({ role: "user", content: text + (screenshotActive ? "\n[Screenshot attached]" : "") });
+    messages.push({ role: "user", content: text + (imageToSend ? "\n[Image attached]" : "") });
     renderAll();
     await saveHistory(p);
     input.value = "";
@@ -506,7 +644,7 @@
     try {
       const result = await new Promise(resolve => {
         chrome.runtime.sendMessage(
-          { action: "SEND_TO_PROVIDER", provider: p, prompt: text, attachScreenshot: screenshotActive },
+          { action: "SEND_TO_PROVIDER", provider: p, prompt: text, imageDataUrl: imageToSend },
           res => resolve(chrome.runtime.lastError ? { error: chrome.runtime.lastError.message } : res)
         );
       });
@@ -532,8 +670,7 @@
       removeLoading();
       renderAll();
       setLocked(false);
-      screenshotActive = false;
-      ssBtn.classList.remove("active");
+      clearAttachedImage();
     }
   }
 
@@ -550,11 +687,65 @@
     }
   });
 
-  ssBtn.addEventListener("click", () => {
-    screenshotActive = !screenshotActive;
-    ssBtn.classList.toggle("active", screenshotActive);
+  // Screenshot button now captures IMMEDIATELY on click (rather than just
+  // arming a flag for later), so the user can preview exactly what was
+  // captured before deciding to send it.
+  ssBtn.addEventListener("click", async () => {
+    if (!isContextValid() || ssBtn.disabled) return;
+    ssBtn.disabled = true;
+    const originalLabel = ssBtn.textContent;
+    ssBtn.textContent = "Capturing…";
+    try {
+      const result = await new Promise(resolve => {
+        chrome.runtime.sendMessage(
+          { action: "CAPTURE_SCREENSHOT" },
+          res => resolve(chrome.runtime.lastError ? { error: chrome.runtime.lastError.message } : res)
+        );
+      });
+      if (result?.dataUrl) {
+        setAttachedImage(result.dataUrl, "screenshot");
+      } else {
+        console.warn("[HuluHub] Screenshot failed:", result?.error);
+      }
+    } finally {
+      ssBtn.disabled = false;
+      ssBtn.textContent = originalLabel;
+    }
   });
-  
+
+  // Paste an image directly into the textarea (Ctrl+V after copying an
+  // image). Only intercepts when the clipboard actually contains image
+  // data — normal text pasting is completely unaffected.
+  input.addEventListener("paste", (e) => {
+    const items = e.clipboardData && e.clipboardData.items;
+    if (!items) return;
+    for (const item of items) {
+      if (item.type && item.type.startsWith("image/")) {
+        e.preventDefault();
+        const file = item.getAsFile();
+        if (!file) continue;
+        const reader = new FileReader();
+        reader.onload = () => setAttachedImage(reader.result, "paste");
+        reader.readAsDataURL(file);
+        return;
+      }
+    }
+    // No image found in the clipboard — let normal text paste proceed.
+  });
+
+  // Click the thumbnail to view the attached image at full size.
+  attachThumb.addEventListener("click", () => {
+    if (attachedImage) openLightbox(attachedImage);
+  });
+  attachRemove.addEventListener("click", (e) => {
+    e.stopPropagation();
+    clearAttachedImage();
+  });
+  lightboxClose.addEventListener("click", closeLightbox);
+  lightbox.addEventListener("click", (e) => {
+    if (e.target === lightbox) closeLightbox(); // click on the dark backdrop closes it
+  });
+
   sendBtn.addEventListener("click", handleSend);
   
   input.addEventListener("keydown", e => {
