@@ -109,7 +109,7 @@
       gap: 10px; 
     }
     .hub-header-left { display: flex; align-items: center; gap: 9px; }
-    .hub-logo-sm { width: 50px; height: 50px; border-radius: 8px; background: rgba(11,18,32,0.3); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .hub-logo-sm { width: 40px; height: 40px; border-radius: 8px; background: rgba(11,18,32,0.3); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .hub-logo-sm svg { width: 40px; height: 40px; }
     .hub-header h3 { font-size: 15px; font-weight: 600; color: #0B1220; letter-spacing: -0.01em; }
     
