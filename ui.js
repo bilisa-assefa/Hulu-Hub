@@ -279,7 +279,7 @@
       <div class="hub-header">
         <div class="hub-header-left">
           <div class="hub-logo-sm">
-             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="40" height="40">
+           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="128" height="128">
   <defs>
     <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#2EF2C4"/>
