@@ -279,14 +279,17 @@
       <div class="hub-header">
         <div class="hub-header-left">
           <div class="hub-logo-sm">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
-              <rect x="10" y="16" width="4" height="20" rx="1.5" fill="#ffffff"/>
-              <rect x="10" y="24" width="10" height="4"  rx="1.5" fill="#ffffff"/>
-              <rect x="16" y="16" width="4" height="20" rx="1.5" fill="#ffffff"/>
-              <rect x="22" y="16" width="4" height="20" rx="1.5" fill="#ffffff"/>
-              <rect x="22" y="24" width="10" height="4"  rx="1.5" fill="#ffffff"/>
-              <rect x="28" y="16" width="4" height="20" rx="1.5" fill="#ffffff"/>
-            </svg>
+             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="40" height="40">
+  <defs>
+    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2EF2C4"/>
+      <stop offset="100%" stop-color="#4D5DFF"/>
+    </linearGradient>
+  </defs>
+  <path fill="url(#g)" d="M18 8C12.5 8 8 12.5 8 18v22c0 5.5 4.5 10 10 10h10l6 6v-6h12c5.5 0 10-4.5 10-10V18c0-5.5-4.5-10-10-10H18z"/>
+  <path fill="#0B1220" d="M20 12c-4.4 0-8 3.6-8 8v18c0 4.4 3.6 8 8 8h10v3.5l4-3.5h10c4.4 0 8-3.6 8-8V20c0-4.4-3.6-8-8-8H20z"/>
+  <path fill="url(#g)" d="M24 18h5v9h6v-9h5v22h-5v-8h-6v8h-5V18z"/>
+</svg>
           </div>
           <h3>Hulu Hub</h3>
         </div>
