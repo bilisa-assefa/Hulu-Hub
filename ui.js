@@ -305,7 +305,7 @@
       </div>
       <div id="hub-history">
         <div class="hub-empty">
-          <div class="hub-empty-icon">✦</div>
+          <div class="hub-empty-icon">🤖</div>
           <div class="hub-empty-text">Start a conversation</div>
         </div>
       </div>
