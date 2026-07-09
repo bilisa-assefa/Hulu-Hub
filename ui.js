@@ -571,7 +571,7 @@
     if (messages.length === 0) {
       history.innerHTML = `
         <div class="hub-empty">
-          <div class="hub-empty-icon">✦</div>
+          <div class="hub-empty-icon">🤖</div>
           <div class="hub-empty-text">Start a conversation</div>
         </div>`;
       return;
