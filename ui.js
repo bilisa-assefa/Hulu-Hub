@@ -1,5 +1,5 @@
 /**
- * Hulu Hub — Floating UI v3.8 (Complete File - Context Safety & Dark Theme)
+ * Hulu Hub — Floating UI v4.2 (New Chat feature + Robust Settings)
  */
 
 "use strict";
@@ -109,13 +109,11 @@
       gap: 10px; 
     }
     .hub-header-left { display: flex; align-items: center; gap: 9px; }
-    .hub-logo-sm { width: 40px; height: 40px; border-radius: 8px;  display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-    .hub-logo-sm svg { width: 40px; height: 40px; }
+    .hub-logo-sm { width: 32px; height: 32px; border-radius: 8px;  display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .hub-logo-sm svg { width: 32px; height: 32px; }
     .hub-header h3 { font-size: 15px; font-weight: 600; color: #0B1220; letter-spacing: -0.01em; }
     
     .hub-provider-wrap { position: relative; }
-    
-    /* DROPDOWN OPACITY & BLACK TEXT FIX */
     #hub-provider { 
       appearance: none; 
       -webkit-appearance: none; 
@@ -133,8 +131,21 @@
     #hub-provider option { background: #ffffff; color: #000000; font-weight: 600; }
     .hub-provider-arrow { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); pointer-events: none; color: #0B1220; font-size: 10px; }
     
-    #hub-close-btn { width: 28px; height: 28px; border-radius: 8px; border: none; background: rgba(11,18,32,0.15); color: #0B1220; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; transition: background 0.15s; font-family: inherit; }
-    #hub-close-btn:hover { background: rgba(11,18,32,0.3); }
+    .hub-icon-btn { width: 28px; height: 28px; border-radius: 8px; border: none; background: rgba(11,18,32,0.15); color: #0B1220; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; transition: background 0.15s; font-family: inherit; }
+    .hub-icon-btn:hover { background: rgba(11,18,32,0.3); }
+
+    /* Settings UI */
+    #hub-settings {
+      position: absolute; inset: 0; top: 60px;
+      background: #000000; z-index: 10; display: none;
+      flex-direction: column; padding: 20px; gap: 12px;
+    }
+    #hub-settings.show { display: flex; }
+    .hub-settings-btn {
+      padding: 12px; border-radius: 8px; border: 1px solid #222;
+      background: #111; color: #fff; cursor: pointer; font-weight: 500; font-family: inherit; text-align: left;
+    }
+    .hub-settings-btn:hover { background: #1a1a1a; }
 
     #hub-history { flex: 1; overflow-y: auto; padding: 16px 14px; display: flex; flex-direction: column; gap: 10px; scroll-behavior: smooth; background: #050505; }
     #hub-history::-webkit-scrollbar { width: 4px; }
@@ -148,14 +159,7 @@
     .hub-msg { max-width: 84%; padding: 10px 14px; border-radius: 16px; font-size: 13.5px; line-height: 1.6; word-wrap: break-word; white-space: pre-wrap; animation: bubbleIn 0.18s ease; }
     @keyframes bubbleIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
     
-    .hub-msg.user { 
-      background: linear-gradient(135deg, #2EF2C4 0%, #4D5DFF 100%); 
-      color: #0B1220; 
-      align-self: flex-end; 
-      border-bottom-right-radius: 4px; 
-      box-shadow: 0 2px 12px rgba(77,93,255,0.25); 
-      font-weight: 500;
-    }
+    .hub-msg.user { background: linear-gradient(135deg, #2EF2C4 0%, #4D5DFF 100%); color: #0B1220; align-self: flex-end; border-bottom-right-radius: 4px; box-shadow: 0 2px 12px rgba(77,93,255,0.25); font-weight: 500; }
     .hub-msg.assistant { background: #121212; color: #f3f4f6; align-self: flex-start; border-bottom-left-radius: 4px; border: 1px solid #1a1a1a; box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
     .hub-msg.loading { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #ffffff; font-style: italic; font-size: 13px; align-self: flex-start; border-bottom-left-radius: 4px; animation: pulse 1.6s ease-in-out infinite; }
     @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
@@ -170,97 +174,46 @@
     #hub-input:disabled { background: #000000; color: #444; border-color: #121212; }
 
     .hub-actions { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-    #hub-ss-btn { display: flex; align-items: center; gap: 5px; padding: 7px 12px; border-radius: 9px; border: 1.5px solid #1c1c1e; background: #0a0a0a; color: #a1a1aa; font-size: 12px; font-weight: 500; cursor: pointer; font-family: inherit; transition: all 0.15s; }
-    #hub-ss-btn:hover { background: #121212; color: #ffffff; border-color: #2c2c2e; }
-    #hub-ss-btn.active { background: #ffffff; border-color: #ffffff; color: #000000; }
+    
+    /* New Chat Toggle Button */
+    #hub-new-chat-btn { display: flex; align-items: center; gap: 5px; padding: 7px 12px; border-radius: 9px; border: 1.5px solid #1c1c1e; background: #0a0a0a; color: #a1a1aa; font-size: 12px; font-weight: 500; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+    #hub-new-chat-btn:hover { background: #121212; color: #ffffff; border-color: #2c2c2e; }
+    #hub-new-chat-btn.active { background: #ffffff; border-color: #ffffff; color: #000000; }
 
-    #hub-send-btn { 
-      padding: 7px 20px; 
-      border-radius: 9px; 
-      border: none; 
-      background: linear-gradient(135deg, #2EF2C4 0%, #4D5DFF 100%); 
-      color: #0B1220; 
-      font-size: 13px; 
-      font-weight: 600; 
-      cursor: pointer; 
-      font-family: inherit; 
-      transition: opacity 0.15s, transform 0.1s; 
-      box-shadow: 0 2px 8px rgba(77,93,255,0.3); 
-      letter-spacing: 0.01em; 
-    }
+    #hub-send-btn { padding: 7px 20px; border-radius: 9px; border: none; background: linear-gradient(135deg, #2EF2C4 0%, #4D5DFF 100%); color: #0B1220; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; transition: opacity 0.15s, transform 0.1s; box-shadow: 0 2px 8px rgba(77,93,255,0.3); letter-spacing: 0.01em; }
     #hub-send-btn:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
-    #hub-send-btn:active:not(:disabled){ transform: translateY(0); }
     #hub-send-btn:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
 
-    /* ── Attachment preview (paste or screenshot) ── */
-    #hub-attach-preview {
-      display: none;
-      align-items: center;
-      gap: 8px;
-      padding: 6px 8px;
-      border-radius: 10px;
-      background: #0a0a0a;
-      border: 1px solid #1c1c1e;
-    }
-    #hub-attach-preview.show { display: flex; }
-    #hub-attach-thumb {
-      width: 36px;
-      height: 36px;
-      border-radius: 7px;
-      object-fit: cover;
-      cursor: pointer;
-      border: 1px solid #2c2c2e;
-      flex-shrink: 0;
-      transition: transform 0.12s;
-    }
-    #hub-attach-thumb:hover { transform: scale(1.06); }
-    #hub-attach-label { flex: 1; font-size: 12px; color: #a1a1aa; font-weight: 500; }
-    #hub-attach-remove {
-      width: 22px; height: 22px;
-      border-radius: 6px;
-      border: none;
-      background: #1c1c1e;
-      color: #a1a1aa;
-      font-size: 11px;
-      cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0;
-      transition: background 0.15s, color 0.15s;
-    }
-    #hub-attach-remove:hover { background: #2c2c2e; color: #fff; }
+    /* Light Theme Overrides */
+    #hub-panel.light-theme, #hub-panel.light-theme #hub-settings { background: #ffffff; }
+    #hub-panel.light-theme { border: 1px solid rgba(0,0,0,0.15); box-shadow: 0 16px 48px rgba(0,0,0,0.2); }
+    #hub-panel.light-theme .hub-header { background: #f4f4f5; border-bottom: 1px solid #e4e4e7; }
+    #hub-panel.light-theme .hub-header h3 { color: #18181b; }
+    #hub-panel.light-theme #hub-provider { background: #e4e4e7; color: #18181b; border-color: #d4d4d8; }
+    #hub-panel.light-theme #hub-history { background: #fafafa; }
+    #hub-panel.light-theme .hub-msg.assistant { background: #ffffff; color: #18181b; border: 1px solid #e4e4e7; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+    #hub-panel.light-theme .hub-msg.loading { color: #71717a; border-color: #e4e4e7; background: #f4f4f5; }
+    #hub-panel.light-theme .hub-input-area { background: #ffffff; border-top: 1px solid #e4e4e7; }
+    #hub-panel.light-theme #hub-input { background: #ffffff; color: #18181b; border-color: #d4d4d8; }
+    #hub-panel.light-theme #hub-new-chat-btn { background: #f4f4f5; color: #3f3f46; border-color: #d4d4d8; }
+    #hub-panel.light-theme #hub-new-chat-btn.active { background: #18181b; color: #ffffff; border-color: #18181b; }
+    #hub-panel.light-theme .hub-empty-text, #hub-panel.light-theme .hub-empty-icon { color: #71717a; }
+    #hub-panel.light-theme .hub-settings-btn { background: #f4f4f5; color: #18181b; border-color: #d4d4d8; }
+    #hub-panel.light-theme .hub-settings-btn:hover { background: #e4e4e7; }
+    #hub-panel.light-theme .hub-icon-btn { background: #e4e4e7; }
 
-    /* ── Lightbox (click thumbnail to view full size) ── */
-    #hub-lightbox {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.86);
-      z-index: 2147483647;
-      align-items: center;
-      justify-content: center;
-      pointer-events: auto;
-    }
+    /* Attachments & Lightbox */
+    #hub-attach-preview { display: none; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 10px; background: #0a0a0a; border: 1px solid #1c1c1e; }
+    #hub-attach-preview.show { display: flex; }
+    #hub-panel.light-theme #hub-attach-preview { background: #f4f4f5; border-color: #d4d4d8; }
+    #hub-attach-thumb { width: 36px; height: 36px; border-radius: 7px; object-fit: cover; cursor: pointer; border: 1px solid #2c2c2e; flex-shrink: 0; transition: transform 0.12s; }
+    #hub-attach-label { flex: 1; font-size: 12px; color: #a1a1aa; font-weight: 500; }
+    #hub-attach-remove { width: 22px; height: 22px; border-radius: 6px; border: none; background: #1c1c1e; color: #a1a1aa; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    
+    #hub-lightbox { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.86); z-index: 2147483647; align-items: center; justify-content: center; pointer-events: auto; }
     #hub-lightbox.show { display: flex; }
-    #hub-lightbox-img {
-      max-width: 90vw;
-      max-height: 90vh;
-      border-radius: 12px;
-      box-shadow: 0 24px 64px rgba(0,0,0,0.6);
-    }
-    #hub-lightbox-close {
-      position: fixed;
-      top: 20px; right: 20px;
-      width: 38px; height: 38px;
-      border-radius: 50%;
-      border: none;
-      background: rgba(255,255,255,0.12);
-      color: #fff;
-      font-size: 16px;
-      cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      transition: background 0.15s;
-    }
-    #hub-lightbox-close:hover { background: rgba(255,255,255,0.24); }
+    #hub-lightbox-img { max-width: 90vw; max-height: 90vh; border-radius: 12px; }
+    #hub-lightbox-close { position: fixed; top: 20px; right: 20px; width: 38px; height: 38px; border-radius: 50%; border: none; background: rgba(255,255,255,0.12); color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; }
   `;
   shadow.appendChild(styleEl);
 
@@ -279,17 +232,16 @@
       <div class="hub-header">
         <div class="hub-header-left">
           <div class="hub-logo-sm">
-           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="40" height="60">
-  <defs>
-    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#2EF2C4"/>
-      <stop offset="100%" stop-color="#4D5DFF"/>
-    </linearGradient>
-  </defs>
-  <path fill="url(#g)" d="M18 8C12.5 8 8 12.5 8 18v22c0 5.5 4.5 10 10 10h10l6 6v-6h12c5.5 0 10-4.5 10-10V18c0-5.5-4.5-10-10-10H18z"/>
-  <path fill="#0B1220" d="M20 12c-4.4 0-8 3.6-8 8v18c0 4.4 3.6 8 8 8h10v3.5l4-3.5h10c4.4 0 8-3.6 8-8V20c0-4.4-3.6-8-8-8H20z"/>
-  <path fill="url(#g)" d="M24 18h5v9h6v-9h5v22h-5v-8h-6v8h-5V18z"/>
-</svg>
+           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="32" height="32">
+              <defs>
+                <linearGradient id="g2" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#2EF2C4"/><stop offset="100%" stop-color="#4D5DFF"/>
+                </linearGradient>
+              </defs>
+              <path fill="url(#g2)" d="M18 8C12.5 8 8 12.5 8 18v22c0 5.5 4.5 10 10 10h10l6 6v-6h12c5.5 0 10-4.5 10-10V18c0-5.5-4.5-10-10-10H18z"/>
+              <path fill="#0B1220" d="M20 12c-4.4 0-8 3.6-8 8v18c0 4.4 3.6 8 8 8h10v3.5l4-3.5h10c4.4 0 8-3.6 8-8V20c0-4.4-3.6-8-8-8H20z"/>
+              <path fill="url(#g2)" d="M24 18h5v9h6v-9h5v22h-5v-8h-6v8h-5V18z"/>
+            </svg>
           </div>
           <h3>Hulu Hub</h3>
         </div>
@@ -301,8 +253,19 @@
           </select>
           <span class="hub-provider-arrow">▾</span>
         </div>
-        <button id="hub-close-btn" title="Close">✕</button>
+        <div style="display:flex; gap: 6px;">
+          <button id="hub-settings-toggle" class="hub-icon-btn" title="Settings">⚙️</button>
+          <button id="hub-close-btn" class="hub-icon-btn" title="Close">✕</button>
+        </div>
       </div>
+      
+      <div id="hub-settings">
+        <h4 style="color: inherit; margin-bottom: 5px;">Hulu Hub Settings</h4>
+        <button id="hub-clear-win" class="hub-settings-btn">🧹 Clear Active Background Windows</button>
+        <button id="hub-clear-chats" class="hub-settings-btn">🗑️ Clear All Chats History</button>
+        <button id="hub-theme-btn" class="hub-settings-btn">🎨 Toggle Theme (Current: Dark)</button>
+      </div>
+
       <div id="hub-history">
         <div class="hub-empty">
           <div class="hub-empty-icon">🤖</div>
@@ -317,7 +280,7 @@
         </div>
         <textarea id="hub-input" placeholder="Ask anything… (Enter to send, Shift+Enter for new line)"></textarea>
         <div class="hub-actions">
-          <button id="hub-ss-btn">📷 Screenshot</button>
+          <button id="hub-new-chat-btn">✨ New Chat</button>
           <button id="hub-send-btn">Send →</button>
         </div>
       </div>
@@ -330,15 +293,15 @@
   `;
   shadow.appendChild(wrapper);
 
-  const hubBtn   = shadow.getElementById("hub-btn");
-  const badge    = shadow.getElementById("hub-badge");
-  const panel    = shadow.getElementById("hub-panel");
-  const history  = shadow.getElementById("hub-history");
-  const input    = shadow.getElementById("hub-input");
-  const sendBtn  = shadow.getElementById("hub-send-btn");
-  const ssBtn    = shadow.getElementById("hub-ss-btn");
-  const provider = shadow.getElementById("hub-provider");
-  const closeBtn = shadow.getElementById("hub-close-btn");
+  const hubBtn       = shadow.getElementById("hub-btn");
+  const badge        = shadow.getElementById("hub-badge");
+  const panel        = shadow.getElementById("hub-panel");
+  const history      = shadow.getElementById("hub-history");
+  const input        = shadow.getElementById("hub-input");
+  const sendBtn      = shadow.getElementById("hub-send-btn");
+  const newChatBtn   = shadow.getElementById("hub-new-chat-btn");
+  const provider     = shadow.getElementById("hub-provider");
+  const closeBtn     = shadow.getElementById("hub-close-btn");
 
   const attachPreview = shadow.getElementById("hub-attach-preview");
   const attachThumb   = shadow.getElementById("hub-attach-thumb");
@@ -348,58 +311,33 @@
   const lightboxImg    = shadow.getElementById("hub-lightbox-img");
   const lightboxClose  = shadow.getElementById("hub-lightbox-close");
 
+  // Settings
+  const settingsToggle = shadow.getElementById("hub-settings-toggle");
+  const settingsPanel  = shadow.getElementById("hub-settings");
+  const clearWinBtn    = shadow.getElementById("hub-clear-win");
+  const clearChatsBtn  = shadow.getElementById("hub-clear-chats");
+  const themeBtn       = shadow.getElementById("hub-theme-btn");
+
   let panelOpen        = false;
   let messages         = [];
   let loadingEl        = null;
   let isBusy           = false;
   let unreadCount      = 0;
-
-  // Unified attachment state — populated by either pasting an image into
-  // the textarea, or clicking the screenshot button. Only one image can be
-  // attached at a time; the newer action replaces the older one.
-  let attachedImage  = null; // data URL string, or null
-  let attachedSource = null; // "paste" | "screenshot"
+  let attachedImage    = null; 
 
   function setAttachedImage(dataUrl, source) {
     attachedImage  = dataUrl;
-    attachedSource = source;
     attachThumb.src = dataUrl;
     attachLabel.textContent = source === "screenshot" ? "Screenshot attached" : "Image attached";
     attachPreview.classList.add("show");
   }
   function clearAttachedImage() {
-    attachedImage  = null;
-    attachedSource = null;
-    attachThumb.src = "";
-    attachPreview.classList.remove("show");
-  }
-  function openLightbox(dataUrl) {
-    lightboxImg.src = dataUrl;
-    lightbox.classList.add("show");
-  }
-  function closeLightbox() {
-    lightbox.classList.remove("show");
-    lightboxImg.src = "";
+    attachedImage = null; attachThumb.src = ""; attachPreview.classList.remove("show");
   }
 
-  // --- LAG-FREE DRAG AND DROP SYSTEM ---
-  let isDragging = false;
-  let startX = 0, startY = 0;
-  let btnLeft = 28, btnBottom = 28;
-  
-  let currentDragLeft = 0;
-  let currentDragTop = 0;
-  let ticking = false;
-
-  chrome.storage.local.get(["hubBtnLeft", "hubBtnBottom"], (data) => {
-    if (data.hubBtnLeft !== undefined) btnLeft = data.hubBtnLeft;
-    if (data.hubBtnBottom !== undefined) btnBottom = data.hubBtnBottom;
-    
-    hubBtn.style.left = `${btnLeft}px`;
-    hubBtn.style.right = "auto";
-    hubBtn.style.bottom = `${btnBottom}px`;
-    repositionPanel();
-  });
+  // --- DRAG SYSTEM ---
+  let isDragging = false, startX = 0, startY = 0, btnLeft = 28, btnBottom = 28;
+  let currentDragLeft = 0, currentDragTop = 0, ticking = false;
 
   function repositionPanel() {
     panel.style.left = `${btnLeft}px`;
@@ -409,128 +347,97 @@
   hubBtn.addEventListener("mousedown", (e) => {
     if (e.button !== 0) return; 
     isDragging = false;
-    startX = e.clientX;
-    startY = e.clientY;
-
-    const initialLeft = hubBtn.offsetLeft;
-    const initialTop = hubBtn.offsetTop;
+    startX = e.clientX; startY = e.clientY;
+    const initialLeft = hubBtn.offsetLeft, initialTop = hubBtn.offsetTop;
 
     function updatePosition() {
-      hubBtn.style.left = `${currentDragLeft}px`;
-      hubBtn.style.top = `${currentDragTop}px`;
-      hubBtn.style.bottom = "auto";
-      
-      panel.style.left = `${currentDragLeft}px`;
-      panel.style.bottom = `${window.innerHeight - currentDragTop + 12}px`;
+      hubBtn.style.left = `${currentDragLeft}px`; hubBtn.style.top = `${currentDragTop}px`; hubBtn.style.bottom = "auto";
+      panel.style.left = `${currentDragLeft}px`; panel.style.bottom = `${window.innerHeight - currentDragTop + 12}px`;
       ticking = false;
     }
 
     function onMouseMove(moveEvent) {
-      const deltaX = moveEvent.clientX - startX;
-      const deltaY = moveEvent.clientY - startY;
-
-      if (!isDragging && (Math.abs(deltaX) > 4 || Math.abs(deltaY) > 4)) {
-        isDragging = true;
-      }
-
+      const deltaX = moveEvent.clientX - startX, deltaY = moveEvent.clientY - startY;
+      if (!isDragging && (Math.abs(deltaX) > 4 || Math.abs(deltaY) > 4)) isDragging = true;
       if (isDragging) {
         currentDragLeft = Math.max(10, Math.min(window.innerWidth - 64, initialLeft + deltaX));
         currentDragTop = Math.max(10, Math.min(window.innerHeight - 64, initialTop + deltaY));
-
-        if (!ticking) {
-          window.requestAnimationFrame(updatePosition);
-          ticking = true;
-        }
+        if (!ticking) { window.requestAnimationFrame(updatePosition); ticking = true; }
       }
     }
 
     function onMouseUp() {
-      document.removeEventListener("mousemove", onMouseMove);
-      document.removeEventListener("mouseup", onMouseUp);
-
+      document.removeEventListener("mousemove", onMouseMove); document.removeEventListener("mouseup", onMouseUp);
       if (isDragging) {
-        btnLeft = hubBtn.offsetLeft;
-        btnBottom = window.innerHeight - (hubBtn.offsetTop + 54);
-        
-        hubBtn.style.bottom = `${btnBottom}px`;
-        hubBtn.style.top = "auto";
+        btnLeft = hubBtn.offsetLeft; btnBottom = window.innerHeight - (hubBtn.offsetTop + 54);
+        hubBtn.style.bottom = `${btnBottom}px`; hubBtn.style.top = "auto";
         repositionPanel();
-        
         chrome.storage.local.set({ hubBtnLeft: btnLeft, hubBtnBottom: btnBottom });
       }
     }
-
     document.addEventListener("mousemove", onMouseMove);
     document.addEventListener("mouseup", onMouseUp);
   });
 
-  // --- INTERACTION FLOW HOOKS ---
+  // --- INTERACTION FLOW ---
   function openPanel() {
     panelOpen = true;
     repositionPanel();
     panel.classList.add("visible");
     hubBtn.classList.add("open");
-    unreadCount = 0;
-    badge.classList.remove("show");
-    badge.textContent = "";
+    unreadCount = 0; badge.classList.remove("show"); badge.textContent = "";
     setTimeout(() => input.focus(), 220);
     scrollBottom();
+    chrome.storage.local.set({ hubPanelOpen: true });
   }
   
   function closePanel() {
     panelOpen = false;
     panel.classList.remove("visible");
     hubBtn.classList.remove("open");
+    settingsPanel.classList.remove("show");
+    chrome.storage.local.set({ hubPanelOpen: false });
   }
+
+  hubBtn.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); if (!isDragging) { panelOpen ? closePanel() : openPanel(); } });
+  closeBtn.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); closePanel(); });
+  shadow.addEventListener("click", e => e.stopPropagation());
+
+  // --- SETTINGS LOGIC ---
+  settingsToggle.addEventListener("click", () => settingsPanel.classList.toggle("show"));
   
-  function togglePanel() {
-    if (panelOpen) closePanel();
-    else openPanel();
+  clearWinBtn.addEventListener("click", () => {
+    chrome.runtime.sendMessage({ action: "CLEAR_WINDOWS" });
+    clearWinBtn.textContent = "✅ Cleared Active Windows!";
+    setTimeout(() => clearWinBtn.textContent = "🧹 Clear Active Background Windows", 2000);
+  });
+  
+  clearChatsBtn.addEventListener("click", () => {
+    chrome.storage.local.remove(["history_chatgpt", "history_claude", "history_gemini"], () => {
+      messages = []; renderAll();
+      clearChatsBtn.textContent = "✅ History Wiped!";
+      setTimeout(() => clearChatsBtn.textContent = "🗑️ Clear All Chats History", 2000);
+    });
+  });
+  
+  function applyTheme(isLight) {
+    if (isLight) panel.classList.add("light-theme"); else panel.classList.remove("light-theme");
+    themeBtn.textContent = isLight ? "🎨 Toggle Theme (Current: Light)" : "🎨 Toggle Theme (Current: Dark)";
   }
 
-  hubBtn.addEventListener("click", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (isDragging) return;
-    togglePanel();
+  themeBtn.addEventListener("click", () => {
+    const isLight = !panel.classList.contains("light-theme");
+    applyTheme(isLight);
+    chrome.storage.local.set({ hubThemeLight: isLight });
   });
 
-  closeBtn.addEventListener("click", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    closePanel();
-  });
+  function isContextValid() { return typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.id; }
 
-  shadow.addEventListener("click", (e) => {
-    e.stopPropagation();
-  });
-
-  // Safety checker for extension background updates
-  function isContextValid() {
-    return typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.id;
-  }
-
-  // Wrap listener registration safely
   try {
     chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
-      if (request.action === "TOGGLE_HUB_PANEL") {
-        togglePanel();
-        return;
-      }
-      // Hide/show the entire widget around a background screenshot capture,
-      // so the widget never appears in the captured image. Toggling display
-      // on the shadow HOST element (root) removes the whole shadow tree from
-      // rendering instantly, with no CSS transition to wait out.
-      if (request.action === "HIDE_HUB_WIDGET") {
-        root.style.display = "none";
-        sendResponse({ ok: true });
-        return;
-      }
-      if (request.action === "SHOW_HUB_WIDGET") {
-        root.style.display = "";
-        sendResponse({ ok: true });
-        return;
-      }
+      if (request.action === "TOGGLE_HUB_PANEL") { panelOpen ? closePanel() : openPanel(); return; }
+      if (request.action === "HIDE_HUB_WIDGET") { root.style.display = "none"; sendResponse({ ok: true }); return; }
+      if (request.action === "SHOW_HUB_WIDGET") { root.style.display = ""; sendResponse({ ok: true }); return; }
     });
   } catch(e) {}
 
@@ -538,232 +445,134 @@
     if (!isContextValid()) return;
     try {
       const data = await chrome.storage.local.get(`history_${p}`);
-      messages   = data[`history_${p}`] || [];
-      renderAll();
-    } catch (e) {
-      console.warn("[HuluHub] Could not load history. Context may be invalidated.");
-    }
+      messages = data[`history_${p}`] || []; renderAll();
+    } catch (e) {}
   }
 
   async function saveHistory(p) {
     if (!isContextValid()) return;
-    try {
-      await chrome.storage.local.set({ [`history_${p}`]: messages });
-    } catch (e) {
-      if (e.message.includes("Extension context invalidated")) {
-        console.warn("[HuluHub] Extension updated in background. Cannot save history until page reload.");
-      } else {
-        console.error("[HuluHub] Storage Error:", e);
-      }
-    }
-  }
-
-  function escapeHTML(s) {
-    return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
-  }
-  
-  function linkify(text) {
-    return escapeHTML(text).replace(/(https?:\/\/[^\s<>"')\]]+)/g, '<a class="hub-link" data-url="$1">$1</a>');
+    try { await chrome.storage.local.set({ [`history_${p}`]: messages }); } catch (e) {}
   }
 
   function renderAll() {
     history.innerHTML = "";
-    if (messages.length === 0) {
-      history.innerHTML = `
-        <div class="hub-empty">
-          <div class="hub-empty-icon">🤖</div>
-          <div class="hub-empty-text">Start a conversation</div>
-        </div>`;
-      return;
-    }
+    if (messages.length === 0) { history.innerHTML = `<div class="hub-empty"><div class="hub-empty-icon">🤖</div><div class="hub-empty-text">Start a conversation</div></div>`; return; }
     for (const m of messages) appendBubble(m.role, m.content);
     scrollBottom();
   }
   
   function appendBubble(role, content) {
-    const div       = document.createElement("div");
-    div.className   = `hub-msg ${role}`;
-    if (role === "assistant") div.innerHTML = linkify(content);
-    else                      div.textContent = content;
-    history.appendChild(div);
-    return div;
+    const div = document.createElement("div");
+    div.className = `hub-msg ${role}`;
+    if (role === "assistant") div.innerHTML = content.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/(https?:\/\/[^\s<>"')\]]+)/g, '<a class="hub-link" data-url="$1">$1</a>');
+    else div.textContent = content;
+    history.appendChild(div); return div;
   }
   
-  function scrollBottom() {
-    requestAnimationFrame(() => { history.scrollTop = history.scrollHeight; });
-  }
+  function scrollBottom() { requestAnimationFrame(() => { history.scrollTop = history.scrollHeight; }); }
 
   history.addEventListener("click", e => {
     const a = e.target.closest(".hub-link");
     if (!a) return;
     e.preventDefault();
-    if (isContextValid()) {
-      chrome.tabs.create({ url: a.dataset.url, active: true });
-    } else {
-      window.open(a.dataset.url, "_blank");
-    }
+    if (isContextValid()) chrome.tabs.create({ url: a.dataset.url, active: true }); else window.open(a.dataset.url, "_blank");
   });
 
   function showLoading() {
-    removeLoading();
-    loadingEl           = document.createElement("div");
-    loadingEl.className = "hub-msg loading";
-    loadingEl.textContent = "Thinking…";
-    history.appendChild(loadingEl);
-    scrollBottom();
-  }
-  
-  function removeLoading() {
     if (loadingEl?.parentNode) loadingEl.parentNode.removeChild(loadingEl);
-    loadingEl = null;
+    loadingEl = document.createElement("div"); loadingEl.className = "hub-msg loading"; loadingEl.textContent = "Thinking…";
+    history.appendChild(loadingEl); scrollBottom();
   }
 
-  function setLocked(v) {
-    isBusy = v;
-    sendBtn.disabled  = v;
-    input.disabled    = v;
-    provider.disabled = v;
-  }
+  // Toggle state for New Chat button
+  newChatBtn.addEventListener("click", () => {
+    newChatBtn.classList.toggle("active");
+  });
 
   async function handleSend() {
     if (isBusy) return;
-    if (!isContextValid()) {
-      alert("Hulu Hub has updated in the background. Please refresh this page to continue chatting.");
-      return;
-    }
+    if (!isContextValid()) { alert("Hulu Hub has updated. Please refresh this page."); return; }
     
-    const text = input.value.trim();
-    if (!text) return;
-    const p = provider.value;
+    const text = input.value.trim(); if (!text) return;
+    const p = provider.value; 
     const imageToSend = attachedImage;
+    const isNewChat = newChatBtn.classList.contains("active");
+
+    // If starting a new chat, wipe the local UI history for this provider first
+    if (isNewChat) {
+      messages = [];
+    }
 
     messages.push({ role: "user", content: text + (imageToSend ? "\n[Image attached]" : "") });
-    renderAll();
-    await saveHistory(p);
-    input.value = "";
-    setLocked(true);
-    showLoading();
+    renderAll(); await saveHistory(p);
+    
+    input.value = ""; isBusy = true; sendBtn.disabled = true; showLoading();
 
     try {
       const result = await new Promise(resolve => {
-        chrome.runtime.sendMessage(
-          { action: "SEND_TO_PROVIDER", provider: p, prompt: text, imageDataUrl: imageToSend },
-          res => resolve(chrome.runtime.lastError ? { error: chrome.runtime.lastError.message } : res)
-        );
+        chrome.runtime.sendMessage({ 
+          action: "SEND_TO_PROVIDER", 
+          provider: p, 
+          prompt: text, 
+          imageDataUrl: imageToSend,
+          newChat: isNewChat 
+        }, res => resolve(chrome.runtime.lastError ? { error: chrome.runtime.lastError.message } : res));
       });
-
-      const content =
-        !result                             ? "No response received. Please try again."   :
-        result.error                        ? `Error: ${result.error}`                    :
-        typeof result.response === "string" ? (result.response.trim() || "[Empty response]") :
-                                              "Unexpected response. Please try again.";
-
-      messages.push({ role: "assistant", content });
-      await saveHistory(p);
-
-      if (!panelOpen) {
-        unreadCount++;
-        badge.textContent = unreadCount > 9 ? "9+" : unreadCount;
-        badge.classList.add("show");
+      
+      const content = !result ? "No response received." : result.error ? `Error: ${result.error}` : (result.response?.trim() || "[Empty response]");
+      messages.push({ role: "assistant", content }); await saveHistory(p);
+      
+      if (!panelOpen) { unreadCount++; badge.textContent = unreadCount > 9 ? "9+" : unreadCount; badge.classList.add("show"); }
+      
+      // Auto-untoggle New Chat so the next message stays in this fresh chat
+      if (isNewChat) {
+        newChatBtn.classList.remove("active");
       }
-    } catch (err) {
-      messages.push({ role: "assistant", content: `Error: ${err.message}` });
-      await saveHistory(p);
+
+    } catch (err) { 
+      messages.push({ role: "assistant", content: `Error: ${err.message}` }); await saveHistory(p); 
     } finally {
-      removeLoading();
-      renderAll();
-      setLocked(false);
-      clearAttachedImage();
+      if (loadingEl?.parentNode) loadingEl.parentNode.removeChild(loadingEl); loadingEl = null;
+      renderAll(); isBusy = false; sendBtn.disabled = false; clearAttachedImage();
     }
   }
 
   provider.addEventListener("change", () => {
-    if (!isContextValid()) {
-      alert("Hulu Hub has updated in the background. Please refresh this page.");
-      return;
-    }
-    try {
-      chrome.storage.local.set({ defaultProvider: provider.value });
-      loadHistory(provider.value);
-    } catch(e) {
-      console.warn("[HuluHub] Failed to switch provider:", e);
-    }
+    if (isContextValid()) { chrome.storage.local.set({ defaultProvider: provider.value }); loadHistory(provider.value); }
   });
 
-  // Screenshot button now captures IMMEDIATELY on click (rather than just
-  // arming a flag for later), so the user can preview exactly what was
-  // captured before deciding to send it.
-  ssBtn.addEventListener("click", async () => {
-    if (!isContextValid() || ssBtn.disabled) return;
-    ssBtn.disabled = true;
-    const originalLabel = ssBtn.textContent;
-    ssBtn.textContent = "Capturing…";
-    try {
-      const result = await new Promise(resolve => {
-        chrome.runtime.sendMessage(
-          { action: "CAPTURE_SCREENSHOT" },
-          res => resolve(chrome.runtime.lastError ? { error: chrome.runtime.lastError.message } : res)
-        );
-      });
-      if (result?.dataUrl) {
-        setAttachedImage(result.dataUrl, "screenshot");
-      } else {
-        console.warn("[HuluHub] Screenshot failed:", result?.error);
-      }
-    } finally {
-      ssBtn.disabled = false;
-      ssBtn.textContent = originalLabel;
-    }
-  });
-
-  // Paste an image directly into the textarea (Ctrl+V after copying an
-  // image). Only intercepts when the clipboard actually contains image
-  // data — normal text pasting is completely unaffected.
   input.addEventListener("paste", (e) => {
-    const items = e.clipboardData && e.clipboardData.items;
-    if (!items) return;
+    const items = e.clipboardData?.items; if (!items) return;
     for (const item of items) {
-      if (item.type && item.type.startsWith("image/")) {
-        e.preventDefault();
-        const file = item.getAsFile();
-        if (!file) continue;
-        const reader = new FileReader();
-        reader.onload = () => setAttachedImage(reader.result, "paste");
-        reader.readAsDataURL(file);
+      if (item.type?.startsWith("image/")) {
+        e.preventDefault(); const file = item.getAsFile();
+        if (!file) continue; const reader = new FileReader();
+        reader.onload = () => setAttachedImage(reader.result, "paste"); reader.readAsDataURL(file);
         return;
       }
     }
-    // No image found in the clipboard — let normal text paste proceed.
   });
 
-  // Click the thumbnail to view the attached image at full size.
-  attachThumb.addEventListener("click", () => {
-    if (attachedImage) openLightbox(attachedImage);
-  });
-  attachRemove.addEventListener("click", (e) => {
-    e.stopPropagation();
-    clearAttachedImage();
-  });
-  lightboxClose.addEventListener("click", closeLightbox);
-  lightbox.addEventListener("click", (e) => {
-    if (e.target === lightbox) closeLightbox(); // click on the dark backdrop closes it
-  });
-
+  attachThumb.addEventListener("click", () => { if (attachedImage) { lightboxImg.src = attachedImage; lightbox.classList.add("show"); } });
+  attachRemove.addEventListener("click", (e) => { e.stopPropagation(); clearAttachedImage(); });
+  lightboxClose.addEventListener("click", () => { lightbox.classList.remove("show"); lightboxImg.src = ""; });
+  lightbox.addEventListener("click", (e) => { if (e.target === lightbox) { lightbox.classList.remove("show"); lightboxImg.src = ""; } });
   sendBtn.addEventListener("click", handleSend);
-  
-  input.addEventListener("keydown", e => {
-    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); }
-  });
+  input.addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } });
 
   (async () => {
     if (!isContextValid()) return;
     try {
-      const stored = await chrome.storage.local.get("defaultProvider");
-      const p      = stored.defaultProvider || "chatgpt";
-      provider.value = p;
-      await loadHistory(p);
+      const data = await chrome.storage.local.get(["hubBtnLeft", "hubBtnBottom", "defaultProvider", "hubPanelOpen", "hubThemeLight"]);
+      if (data.hubBtnLeft !== undefined) btnLeft = data.hubBtnLeft;
+      if (data.hubBtnBottom !== undefined) btnBottom = data.hubBtnBottom;
+      hubBtn.style.left = `${btnLeft}px`; hubBtn.style.bottom = `${btnBottom}px`;
+      repositionPanel();
+
+      const p = data.defaultProvider || "chatgpt";
+      provider.value = p; await loadHistory(p);
+      applyTheme(data.hubThemeLight === true);
+      if (data.hubPanelOpen) openPanel();
     } catch(e) {}
   })();
-
-  console.log("[HuluHub] UI ready on", window.location.hostname);
 })();

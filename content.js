@@ -1,8 +1,42 @@
-
 "use strict";
 
 if (!window.__HULU_HUB_INJECTED) {
   window.__HULU_HUB_INJECTED = true;
+
+  // --- ANTI-THROTTLING HACKS (THE 1-MINUTE DELAY FIX) ---
+  // Bypasses Chrome's 1-FPS background tab throttling for React animations.
+  // We use postMessage instead of timeouts/blobs to comply with strict CSP.
+  try {
+    Object.defineProperty(Document.prototype, 'visibilityState', { get: () => 'visible' });
+    Object.defineProperty(Document.prototype, 'hidden', { get: () => false });
+
+    const TICK_EVENT = 'hulu_hub_raf_tick';
+    let rafCallbacks = [];
+    let rafPending = false;
+
+    window.addEventListener('message', (e) => {
+      if (e.source === window && e.data === TICK_EVENT) {
+        rafPending = false;
+        const callbacks = rafCallbacks;
+        rafCallbacks = [];
+        const now = performance.now();
+        for (const cb of callbacks) {
+          try { cb(now); } catch (err) {}
+        }
+      }
+    });
+
+    window.requestAnimationFrame = function(cb) {
+      rafCallbacks.push(cb);
+      if (!rafPending) {
+        rafPending = true;
+        // Instantly forces the frame to render via the event loop
+        window.postMessage(TICK_EVENT, '*');
+      }
+      return Math.random(); 
+    };
+    window.cancelAnimationFrame = function() {};
+  } catch(e) {}
 
   const sleep = ms => new Promise(r => setTimeout(r, ms));
   const toCSS = s  => Array.isArray(s) ? s.join(", ") : s;
@@ -19,7 +53,7 @@ if (!window.__HULU_HUB_INJECTED) {
     selectors: {
       input:            ["#prompt-textarea", "textarea", "[contenteditable='true']"],
       sendButton:       ['button[data-testid="send-button"]', 'button[aria-label="Send prompt"]', 'button.mb-1'],
-      stopButton:       ['button[data-testid="stop-button"]', 'button[aria-label="Stop"]'],
+      stopButton:       ['button[data-testid="stop-button"]', 'button[aria-label*="Stop generating"]'],
       assistantMessage: ['div[data-message-author-role="assistant"]', '.prose', '.markdown'],
     },
     extractText(el) {
@@ -34,13 +68,8 @@ if (!window.__HULU_HUB_INJECTED) {
     name: "claude",
     selectors: {
       input:            ['div[contenteditable="true"]', '.ProseMirror', '[role="textbox"]', 'textarea'],
-      // FIX: removed the 'button:has(svg)' wildcard fallback. It matched
-      // the FIRST button anywhere on the page containing an <svg> (sidebar
-      // toggles, copy icons, avatar menus, etc.) whenever the real Send
-      // button wasn't found in time — causing a silent click on the wrong
-      // element, so the prompt was injected but never actually submitted.
       sendButton:       ['button[aria-label*="Send"]', 'button[aria-label*="send"]'],
-      stopButton:       ['button[aria-label*="Stop"]', 'button[aria-label*="stop"]'],
+      stopButton:       ['button[aria-label*="Stop generating"]', 'button[aria-label*="stop"]'],
       assistantMessage: ['.font-claude-message', '[data-testid="assistant-message"]', '.prose', 'div[data-is-streaming]'],
     },
     extractText(el) {
@@ -49,16 +78,9 @@ if (!window.__HULU_HUB_INJECTED) {
       let raw = (container.innerText || container.textContent || "");
       return raw.replace(/[▋●■]$/, "").replace(/^Claude responded:\s*/i, "").trim();
     },
-    // FIX: hasAttribute() only checks whether the attribute exists, not its
-    // value. Claude sets data-is-streaming="false" when done rather than
-    // removing the attribute, so hasAttribute() was always true — meaning
-    // this function could never report "not streaming," and every Claude
-    // response had to fall all the way through to the 120-second hard
-    // timeout instead of resolving within ~2.5s like ChatGPT and Gemini do.
     isNodeStreaming(node) {
       const attrStreaming = node ? node.getAttribute("data-is-streaming") === "true" : false;
-      const stopBtnVisible = !!document.querySelector('button[aria-label*="Stop"]');
-      return attrStreaming || stopBtnVisible;
+      return attrStreaming;
     },
   };
 
@@ -93,7 +115,11 @@ if (!window.__HULU_HUB_INJECTED) {
   function isStreaming(provider, node) {
     if (provider.isNodeStreaming(node)) return true;
     const stops = Array.isArray(provider.selectors.stopButton) ? provider.selectors.stopButton : [provider.selectors.stopButton];
-    for (const s of stops) if (document.querySelector(s)) return true;
+    for (const s of stops) {
+      const btn = document.querySelector(s);
+      // Ensure the button is actually taking up space on screen, not just hidden in DOM
+      if (btn && btn.offsetWidth > 0 && btn.offsetHeight > 0) return true;
+    }
     if (provider.name === "gemini" && document.querySelector("mat-progress-bar")) return true;
     return false;
   }
@@ -206,19 +232,59 @@ if (!window.__HULU_HUB_INJECTED) {
     });
   }
 
-  async function uploadScreenshot(dataUrl) {
-    const inputs = document.querySelectorAll('input[type="file"]');
-    if (!inputs.length) return false;
+  async function pasteScreenshot(dataUrl, inputEl) {
     try {
-      const blob = await (await fetch(dataUrl)).blob();
-      const file = new File([blob], "screenshot.png", { type: "image/png" });
-      const dt   = new DataTransfer();
+      const res = await fetch(dataUrl);
+      const blob = await res.blob();
+      const file = new File([blob], "screenshot.png", { type: blob.type });
+      const dt = new DataTransfer();
       dt.items.add(file);
-      const fi = inputs[inputs.length - 1];
-      fi.files = dt.files;
-      fi.dispatchEvent(new Event("change", { bubbles: true }));
+      
+      inputEl.focus();
+      const pasteEvent = new ClipboardEvent("paste", {
+        clipboardData: dt,
+        bubbles: true,
+        cancelable: true
+      });
+      inputEl.dispatchEvent(pasteEvent);
       return true;
-    } catch { return false; }
+    } catch (e) { 
+      return false; 
+    }
+  }
+
+  // Dynamic Upload Watcher - Fast Polling
+  async function waitForImageUpload(provider) {
+    const maxWait = 15000;
+    const start = Date.now();
+    let stableCount = 0;
+
+    while (Date.now() - start < maxWait) {
+      const isUploading = !!document.querySelector('progress, .animate-spin, [stroke-dasharray], mat-progress-spinner');
+      
+      let isBtnReady = false;
+      const btns = Array.isArray(provider.selectors.sendButton) ? provider.selectors.sendButton : [provider.selectors.sendButton];
+      
+      for (const s of btns) {
+        const btn = document.querySelector(s);
+        if (btn && !btn.disabled && btn.getAttribute("aria-disabled") !== "true") {
+          isBtnReady = true;
+          break;
+        }
+      }
+
+      if (!isUploading && isBtnReady) {
+        stableCount++;
+        if (stableCount >= 2) return true; // UI settled for 2 fast ticks
+      } else {
+        stableCount = 0; 
+      }
+      
+      await sleep(100);
+    }
+    
+    console.warn("[HuluHub] Image upload watcher timed out.");
+    return false; 
   }
 
   async function handleSendPrompt({ prompt, imageData }) {
@@ -226,18 +292,28 @@ if (!window.__HULU_HUB_INJECTED) {
     if (!provider) throw new Error("Unsupported provider.");
 
     let text = SYSTEM_INSTRUCTION + prompt;
-    if (imageData) {
-      const ok = await uploadScreenshot(imageData);
-      if (ok) await sleep(1500);
-      else text = `[Screenshot could not be attached]\n\n${text}`;
-    }
-
+    
     const msgCSS     = toCSS(provider.selectors.assistantMessage);
     const startCount = document.querySelectorAll(msgCSS).length;
 
     const inputEl = await findElement(provider.selectors.input);
+    
+    // Always inject the text first
     await injectText(inputEl, text);
-    await sleep(250);
+    
+    // Paste image natively and wait dynamically
+    if (imageData) {
+      const ok = await pasteScreenshot(imageData, inputEl);
+      if (ok) {
+        await sleep(150); 
+        await waitForImageUpload(provider);
+      } else {
+        text = `[Screenshot could not be attached]\n\n${text}`;
+        await injectText(inputEl, text); 
+      }
+    }
+
+    await sleep(100);
     await clickSend(provider);
     return { response: await waitForResponse(provider, startCount) };
   }
